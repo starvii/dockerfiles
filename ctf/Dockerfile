@@ -39,9 +39,17 @@ RUN cp /etc/apt/sources.list /etc/apt/sources.list~ \
     && mkdir -p ${DOCKER_SHARE} /home/app \
     && chown ${DOCKER_USER}:${DOCKER_USER} ${DOCKER_SHARE} /home/app \
     && mkdir -p /etc/pip \
-    && echo -e "[global]\nindex-url=https://mirrors.huaweicloud.com/repository/pypi/simple\ntrusted-host=mirrors.huaweicloud.com\ntimeout=120" > /etc/pip/pip.conf \
+    && echo -e "\[global\]\nindex-url=https://mirrors.huaweicloud.com/repository/pypi/simple\ntrusted-host=mirrors.huaweicloud.com\ntimeout=120" > /etc/pip/pip.conf \
     && ln -s /etc/pip ${HOME}/.pip \
     && ln -s /etc/pip ${DOCKER_HOME}/.pip \
-    && python2 -m pip install -U pwntools pycrypto gmpy gmpy2 \
-    && python3 -m pip install -U pycrypto gmpy gmpy2 uncompyle6 \
-    && su - admin -c "git clone https://"
+    && python2 -m pip uninstall -y pycrypto crypto \
+    && python3 -m pip uninstall -y pycrypto crypto \
+    && python2 -m pip install -U pip setuptools pwntools pycrypto gmpy gmpy2 \
+    && python3 -m pip install -U pip setuptools pycrypto gmpy gmpy2 uncompyle6 \
+    && su - admin -c "git clone https://github.com/inaz2/roputils.git /home/app/roputils" \
+    && su - admin -c "git clone https://github.com/zardus/ctf-tools.git /home/app/ctf-tools" \
+    && 
+
+VOLUME /home/ctf
+
+CMD ["su", "-", "admin"]
