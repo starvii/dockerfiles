@@ -13,12 +13,10 @@
 
 FROM debian:buster
 
-ENV DOCKER_USER="admin" \
-    DOCKER_UID="1000" \
-    DOCKER_HOME="/home/${DOCKER_USER}" \
-    DOCKER_SHRC="${DOCKER_HOME}/.bashrc" \
-    DOCKER_SHARE="/home/ctf"
-    
+ARG DOCKER_USER="admin"
+ARG DOCKER_UID="1000"
+ARG DOCKER_SHRC="/home/${DOCKER_USER}/.bashrc"
+ARG DOCKER_SHARE="/home/ctf"
 
 RUN cp /etc/apt/sources.list /etc/apt/sources.list~ \
     && sed -i "s@http://deb.debian.org@http://mirrors.huaweicloud.com@g" /etc/apt/sources.list \
@@ -39,7 +37,7 @@ RUN cp /etc/apt/sources.list /etc/apt/sources.list~ \
     && mkdir -p ${DOCKER_SHARE} /home/app \
     && chown ${DOCKER_USER}:${DOCKER_USER} ${DOCKER_SHARE} /home/app \
     && mkdir -p /etc/pip \
-    && echo -e "\[global\]\nindex-url=https://mirrors.huaweicloud.com/repository/pypi/simple\ntrusted-host=mirrors.huaweicloud.com\ntimeout=120" > /etc/pip/pip.conf \
+    && echo -e "[global]\nindex-url=https://mirrors.huaweicloud.com/repository/pypi/simple\ntrusted-host=mirrors.huaweicloud.com\ntimeout=120" > /etc/pip/pip.conf \
     && ln -s /etc/pip ${HOME}/.pip \
     && ln -s /etc/pip ${DOCKER_HOME}/.pip \
     && python2 -m pip uninstall -y pycrypto crypto \
