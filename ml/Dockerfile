@@ -16,6 +16,7 @@ FROM debian:latest
 
 ARG DOCKER_USER="admin"
 ARG DOCKER_UID="1000"
+ARG DOCKER_PASSWD="123"
 ARG DOCKER_SHRC="/home/${DOCKER_USER}/.bashrc"
 ARG DOCKER_SHARE="/home/ml"
 ARG DOCKER_PORT="8888"
@@ -32,7 +33,7 @@ RUN cp /etc/apt/sources.list /etc/apt/sources.list~ \
     && apt upgrade -y \
     && apt install -y python-pip python3-pip curl wget sudo \
     && useradd -m -u ${DOCKER_UID} -G sudo -s /bin/bash ${DOCKER_USER} \
-    && echo ${DOCKER_USER}:123 | chpasswd \
+    && echo ${DOCKER_USER}:${DOCKER_PASSWD} | chpasswd \
     && mkdir -p ${DOCKER_SHARE} \
     && chown ${DOCKER_USER}:${DOCKER_USER} ${DOCKER_SHARE} \
     && bash -c 'echo -e "\numask 022\n" >> ${DOCKER_SHRC}' \

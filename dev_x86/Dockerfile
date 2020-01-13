@@ -15,6 +15,7 @@ FROM i386/debian:latest
 
 ARG DOCKER_USER="admin"
 ARG DOCKER_UID="1000"
+ARG DOCKER_PASSWD="123"
 ARG DOCKER_SHRC="/home/${DOCKER_USER}/.bashrc"
 ARG DOCKER_SHARE="/home/src"
 ARG DOCKER_HTTP_PROXY="http://10.0.0.1:57070"
@@ -42,7 +43,7 @@ RUN echo "\$DOCKER_USER = $DOCKER_USER" \
     && apt install -y git vim build-essential gdb cmake golang musl-tools musl-dev python-pip python3-pip curl wget netcat sudo \
     libssl-dev \
     && useradd -m -u ${DOCKER_UID} -G sudo -s /bin/bash ${DOCKER_USER} \
-    && echo ${DOCKER_USER}:123 | chpasswd \
+    && echo ${DOCKER_USER}:${DOCKER_PASSWD} | chpasswd \
     && mkdir -p ${DOCKER_SHARE} \
     && chown ${DOCKER_USER}:${DOCKER_USER} ${DOCKER_SHARE} \
     && bash -c 'echo -e "\numask 022\nexport RUSTUP_UPDATE_ROOT=${RUSTUP_UPDATE_ROOT}\nexport RUSTUP_DIST_SERVER=${RUSTUP_DIST_SERVER}\nexport PATH=\${PATH}:\${HOME}/.cargo/bin\nexport GOPATH=/home/src/go\n" >> ${DOCKER_SHRC}' \
