@@ -55,38 +55,43 @@ RUN cp /etc/apt/sources.list /etc/apt/sources.list~ \
     && python2 -m pip uninstall -y pycrypto crypto \
     && python3 -m pip uninstall -y pycrypto crypto \
     && python2 -m pip install -U pip setuptools pwntools pycrypto gmpy gmpy2 \
-    && python3 -m pip install -U pip setuptools pycrypto gmpy gmpy2 uncompyle6 
-    # # 配置ctf-tools
-    # && su - admin -c "git clone https://github.com/zardus/ctf-tools.git /home/app/ctf-tools" \
-    # && su - admin -c "/home/app/ctf-tools/dirsearch/install" \
-    # && ln -s /home/app/ctf-tools/dirsearch/bin/dirsearch.py /usr/bin/dirsearch \
-    # # one_gadget（rubygems）
-    # && su - admin -c "/home/app/ctf-tools/one_gadget/install" \
-
-# peda
-# pwndbg
+    && python3 -m pip install -U pip setuptools pycrypto gmpy gmpy2 uncompyle6 \
+    # 配置ctf-tools
+    # dirsearch
+    && su - admin -c "git clone https://github.com/zardus/ctf-tools.git /home/app/ctf-tools" \
+    && su - admin -c "/home/app/ctf-tools/dirsearch/install" \
+    && ln -s /home/app/ctf-tools/dirsearch/bin/dirsearch.py /usr/bin/dirsearch \
+    # one_gadget（rubygems）
+    && su - admin -c "/home/app/ctf-tools/one_gadget/install" \
+    && ln -s /home/admin/.gem/ruby/2.5.0/bin/one_gadget /usr/bin/one_gadget \
+    # peda
+    && su - admin -c "/home/app/ctf-tools/peda/install" \
+    # pwndbg
+    && su - admin -c "/home/app/ctf-tools/pwndbg/install"
 # rp++
 # yafu
 # zsteg
 
     # # 其他一些工具
-    # && su - admin -c "git clone https://github.com/inaz2/roputils.git /home/app/roputils" \
+    # && su - admin -c "git clone --depth 1 https://github.com/inaz2/roputils.git /home/app/roputils" \
     # # TODO: 需要配置
-    # && su - admin -c "git clone https://github.com/iagox86/hash_extender.git /home/app/hash_extender" \
+    # && su - admin -c "git clone --depth 1 https://github.com/iagox86/hash_extender.git /home/app/hash_extender" \
     # # TODO: 需要编译
-    # && su - admin -c "git clone https://github.com/livz/cloacked-pixel.git /home/app/cloacked-pixel" \
+    # && su - admin -c "git clone --depth 1 https://github.com/livz/cloacked-pixel.git /home/app/cloacked-pixel" \
     # # TODO: 需要安装依赖
-    # && su - admin -c "git clone https://github.com/theonlypwner/crc32.git /home/app/crc32" \
-    # && su - admin -c "git clone https://github.com/lijiejie/GitHack.git /home/app/GitHack" \
-    # && su - admin -c "git clone https://github.com/scwuaptx/Pwngdb.git /home/app/Pwngdb" \
+    # && su - admin -c "git clone --depth 1 https://github.com/theonlypwner/crc32.git /home/app/crc32" \
+    # && su - admin -c "git clone --depth 1 https://github.com/lijiejie/GitHack.git /home/app/GitHack" \
+    # && su - admin -c "git clone --depth 1 https://github.com/scwuaptx/Pwngdb.git /home/app/Pwngdb" \
     # # TODO: 需要配置
-    # && su - admin -c "git clone https://github.com/lieanu/LibcSearcher.git /home/app/LibcSearcher" \
+    # && su - admin -c "git clone --depth 1 https://github.com/lieanu/LibcSearcher.git /home/app/LibcSearcher" \
     # # TODO: 需要安装
-    # && su - admin -c "git clone https://github.com/ius/rsatool.git /home/app/rsatool" \
-    # && su - admin -c "git clone https://github.com/tarunkant/Gopherus.git /home/app/Gopherus" \
-    # && su - admin -c "git clone https://github.com/pablocelayes/rsa-wiener-attack.git /home/app/rsa-wiener-attack" \
-    # && su - admin -c "git clone https://github.com/yangyangwithgnu/bypass_disablefunc_via_LD_PRELOAD.git /home/app/bypass_disablefunc_via_LD_PRELOAD"
+    # && su - admin -c "git clone --depth 1 https://github.com/ius/rsatool.git /home/app/rsatool" \
+    # && su - admin -c "git clone --depth 1 https://github.com/tarunkant/Gopherus.git /home/app/Gopherus" \
+    # && su - admin -c "git clone --depth 1 https://github.com/pablocelayes/rsa-wiener-attack.git /home/app/rsa-wiener-attack" \
+    # && su - admin -c "git clone --depth 1 https://github.com/yangyangwithgnu/bypass_disablefunc_via_LD_PRELOAD.git /home/app/bypass_disablefunc_via_LD_PRELOAD"
 
+# 多版本的libc
+# COPY 
 
 VOLUME ${DOCKER_SHARE}
 
