@@ -4,11 +4,11 @@
 # 端口映射 22 -> 1122
 
 # 建立命令
-#   docker build -t ctf:pwn .
+#   docker build -t ctf:v1 .
 # 首次启动命令
-#   docker run -it -p 1122:22 -v /home/ctf:/home/ctf --name pwn ctf:pwn
+#   docker run -it -p 1122:22 -v /home/ctf:/home/ctf --name ctf ctf:v1
 # 后续启动命令
-#   docker start -i pwn
+#   docker start -i ctf
 
 
 FROM debian:buster
