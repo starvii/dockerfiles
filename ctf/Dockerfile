@@ -4,11 +4,11 @@
 # 端口映射 22 -> 1122
 
 # 建立命令
-#   docker build -t ctf:v1 .
+#   docker build -t ctf:pwn .
 # 首次启动命令
-#   docker run -it -p 1122:22 -v /home/ctf:/home/ctf --name ctf ctf:v1
+#   docker run -it -p 1122:22 -v /home/ctf:/home/ctf --name pwn ctf:pwn
 # 后续启动命令
-#   docker start -i ctf
+#   docker start -i pwn
 
 
 FROM debian:buster
@@ -24,25 +24,25 @@ RUN cp /etc/apt/sources.list /etc/apt/sources.list~ \
     && echo "更新系统" \
     && sed -i "s@http://deb.debian.org@http://mirrors.huaweicloud.com@g" /etc/apt/sources.list \
     && sed -i "s@http://security.debian.org@http://mirrors.huaweicloud.com@g" /etc/apt/sources.list \
-    && apt update \
-    && apt install -y apt-transport-https ca-certificates \
+    && apt update &>/dev/null \
+    && apt install -y apt-transport-https ca-certificates &>/dev/null \
     && sed -i 's@http://@https://@g' /etc/apt/sources.list \
-    && apt update \
-    && apt upgrade -y \
+    && apt update &>/dev/null \
+    && apt upgrade -y &>/dev/null \
     && echo "安装基础组件" \
-    && apt install -y git vim build-essential gdb cmake python-pip python3-pip curl wget netcat sudo net-tools zsh \
+    && apt install -y git vim build-essential gdb cmake python-pip python3-pip curl wget netcat sudo net-tools &>/dev/null \
     && echo "安装ctf基础组件" \
-    && apt install -y binwalk rlwrap socat libgmp-dev libmpc-dev libmpfr-dev rubygems \
+    && apt install -y binwalk rlwrap socat libgmp-dev libmpc-dev libmpfr-dev rubygems &>/dev/null \
     && echo "安装x86支持" \
-    && dpkg --add-architecture i386 \
-    && apt install -y gcc-multilib g++-multilib multiarch-support \
+    && dpkg --add-architecture i386 &>/dev/null \
+    && apt install -y gcc-multilib g++-multilib multiarch-support &>/dev/null \
     && echo "安装sshd" \
-    && apt install -y openssh-server \
-    && systemctl enable ssh \
+    && apt install -y openssh-server &>/dev/null \
+    && systemctl enable ssh &>/dev/null \
     && echo "建立常规用户" \
     && useradd -m -u ${DOCKER_UID} -G sudo -s /bin/bash ${DOCKER_USER} \
     && echo ${DOCKER_USER}:${DOCKER_PASSWD} | chpasswd \
-    && bash -c 'echo -e "\numask 022\n" >> ${DOCKER_SHRC}' \
+    && bash -c 'echo -e "\numask 022\nexport PATH=\${PATH}:/home/admin/.gem/ruby/2.5.0/bin\n" >> ${DOCKER_SHRC}' \
     && echo "建立应用程序目录与共享目录" \
     && mkdir -p ${DOCKER_SHARE} /home/app \
     && chown ${DOCKER_USER}:${DOCKER_USER} ${DOCKER_SHARE} /home/app \
@@ -52,25 +52,27 @@ RUN cp /etc/apt/sources.list /etc/apt/sources.list~ \
     && ln -s /etc/pip ${HOME}/.pip \
     && ln -s /etc/pip ${DOCKER_HOME}/.pip \
     && echo "安装python模块" \
-    && python2 -m pip uninstall -y pycrypto crypto \
-    && python3 -m pip uninstall -y pycrypto crypto \
-    && python2 -m pip install -U pip setuptools pwntools pycrypto gmpy gmpy2 \
-    && python3 -m pip install -U pip setuptools pycrypto gmpy gmpy2 uncompyle6 \
-    # 配置ctf-tools
-    # dirsearch
-    && su - admin -c "git clone https://github.com/zardus/ctf-tools.git /home/app/ctf-tools" \
-    && su - admin -c "/home/app/ctf-tools/dirsearch/install" \
-    && ln -s /home/app/ctf-tools/dirsearch/bin/dirsearch.py /usr/bin/dirsearch \
+    && python2 -m pip uninstall -y pycrypto crypto &>/dev/null \
+    && python3 -m pip uninstall -y pycrypto crypto &>/dev/null \
+    && echo "安装pwntools pycrypto gmpy gmpy2到python2" \
+    && python2 -m pip install -U pip setuptools pwntools pycrypto gmpy gmpy2 &>/dev/null \
+    && echo "安装uncompyle6 pycrypto gmpy gmpy2到python3" \
+    && python3 -m pip install -U pip setuptools pycrypto gmpy gmpy2 uncompyle6 &>/dev/null \
+    && echo "安装ctf-tools" \
+    && su - admin -c "git clone https://github.com/zardus/ctf-tools.git /home/app/ctf-tools" &>/dev/null \
     # one_gadget（rubygems）
-    && su - admin -c "/home/app/ctf-tools/one_gadget/install" \
+    && su - admin -c "cd /home/app/ctf-tools/one_gadget && ./install" \
     && ln -s /home/admin/.gem/ruby/2.5.0/bin/one_gadget /usr/bin/one_gadget \
     # peda
-    && su - admin -c "/home/app/ctf-tools/peda/install" \
+    && su - admin -c "cd /home/app/ctf-tools/peda && ./install" \
     # pwndbg
-    && su - admin -c "/home/app/ctf-tools/pwndbg/install"
-# rp++
-# yafu
-# zsteg
+    ## && su - admin -c "cd /home/app/ctf-tools/pwndbg && ./install"
+    ## 由于pwndbg自动安装存在问题，故使用手动安装
+    # rp++
+    && su - admin -c "cd /home/app/ctf-tools/rp++ && ./install" \
+    && ln -s /home/app/ctf-tools/rp++/bin/rp++ /usr/bin/rp++ \
+    # yafu
+    # yafu运行时报段错误，可能需要到当前目录下运行？
 
     # # 其他一些工具
     # && su - admin -c "git clone --depth 1 https://github.com/inaz2/roputils.git /home/app/roputils" \
