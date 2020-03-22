@@ -13,6 +13,8 @@
 
 FROM debian:buster
 
+ARG DOCKER_SHARE="/home/ctf"
+
 COPY ./init.bash /tmp/init.bash
 
 RUN bash -v /tmp/init.sh
