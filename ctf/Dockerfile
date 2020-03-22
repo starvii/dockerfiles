@@ -15,7 +15,7 @@ FROM debian:buster
 
 COPY ./init.sh /tmp/init.sh
 
-RUN sh /tmp/init.sh
+RUN bash /tmp/init.sh
 
 # 多版本的libc
 # COPY 

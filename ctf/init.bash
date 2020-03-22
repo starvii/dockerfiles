@@ -35,7 +35,7 @@ cp /etc/apt/sources.list /etc/apt/sources.list~ \
 && chown ${DOCKER_USER}:${DOCKER_USER} ${DOCKER_SHARE} /home/app \
 && echo "配置PIP源" \
 && mkdir -p /etc/pip \
-&& bash -c "echo -e '[global]\nindex-url=https://mirrors.huaweicloud.com/repository/pypi/simple\ntrusted-host=mirrors.huaweicloud.com\ntimeout=120' > /etc/pip/pip.conf" \
+&& echo -e '[global]\nindex-url=https://mirrors.huaweicloud.com/repository/pypi/simple\ntrusted-host=mirrors.huaweicloud.com\ntimeout=120' > /etc/pip/pip.conf \
 && ln -s /etc/pip ${HOME}/.pip \
 && ln -s /etc/pip ${DOCKER_HOME}/.pip \
 && echo "安装python模块" \
