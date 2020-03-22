@@ -13,13 +13,14 @@
 
 FROM debian:buster
 
-COPY ./init.sh /tmp/init.sh
+COPY ./init.bash /tmp/init.bash
 
-RUN bash /tmp/init.sh
+RUN bash -v /tmp/init.sh
 
 # 多版本的libc
 # COPY 
 
 VOLUME ${DOCKER_SHARE}
 
+# 切换至普通用户
 CMD ["su", "-", "admin"]
