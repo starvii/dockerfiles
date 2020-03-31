@@ -23,7 +23,7 @@ echo "\$DOCKER_USER = ${DOCKER_USER}" \
 && apt update \
 && apt upgrade -y \
 && apt install -y git vim build-essential gdb cmake golang musl-tools musl-dev python-pip python3-pip curl wget netcat sudo \
-libssl-dev pkg-config \
+libssl-dev pkg-config libtool \
 && useradd -m -u ${DOCKER_UID} -G sudo -s /bin/bash ${DOCKER_USER} \
 && echo ${DOCKER_USER}:${DOCKER_PASSWD} | chpasswd \
 && mkdir -p ${DOCKER_SHARE} \
