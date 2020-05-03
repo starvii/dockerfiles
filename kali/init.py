@@ -54,18 +54,21 @@ class Action:
 
     @staticmethod
     def a00_change_apt_source():
-        SOURCES_LIST = """
-deb https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
-deb-src https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
+        try:
+            SOURCES_LIST = """
+    deb https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
+    deb-src https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
 
-# deb https://mirrors.huaweicloud.com/kali kali-rolling main non-free contrib
-# deb-src https://mirrors.huaweicloud.com/kali kali-rolling main non-free contrib
+    # deb https://mirrors.huaweicloud.com/kali kali-rolling main non-free contrib
+    # deb-src https://mirrors.huaweicloud.com/kali kali-rolling main non-free contrib
 
-# deb https://mirrors.ustc.edu.cn/kali kali-rolling main non-free contrib
-# deb-src https://mirrors.ustc.edu.cn/kali kali-rolling main non-free contrib
-"""
-        sources_list = SOURCES_LIST.strip().encode()
-        open("/etc/apt/sources.list", "wb").write(sources_list)
+    # deb https://mirrors.ustc.edu.cn/kali kali-rolling main non-free contrib
+    # deb-src https://mirrors.ustc.edu.cn/kali kali-rolling main non-free contrib
+    """
+            sources_list = SOURCES_LIST.strip().encode()
+            open("/etc/apt/sources.list", "wb").write(sources_list)
+        except Exception as e:
+            print(e)
         script = """
 ################################################################################
 echo "change apt source and update"
@@ -292,19 +295,19 @@ def to_shell_script(script, filename=None):
     for line in lines:
         l = line.strip()
         if len(l) == 0:
-            buffer.append(line)
+            buffer.append("\n" + line)
         elif l.startswith("#"):
-            buffer.append(line)
+            buffer.append("\n" + line)
         elif first:
             first = False
-            buffer.append(line)
+            buffer.append("\n" + line)
         else:
             buffer.append(" \\\n&& " + line)
     shell_script = "".join(buffer)
     if filename is None:
         filename = "/tmp/" + base64.b32encode(os.urandom(10)).decode().lower() + ".sh"
     print(filename)
-    open(filename, "wb").write(shell_script.encode())
+    open(filename, "wb").write(shell_script.encode().strip())
     # os.system("sh {filename}".format(filename=filename))
     # os.system("rm -rf {filename}".format(filename=filename))
 
