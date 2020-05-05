@@ -7,7 +7,7 @@ import json
 import os
 from os import path
 
-BASE = path.split(path.abspath(__file__))[0]
+BASE = path.dirname(path.dirname(path.abspath(__file__)))
 
 
 class Detect:
@@ -110,7 +110,6 @@ python3 -m pip install -U requests aiohttp lxml beautifulsoup4 tornado
 ################################################################################
 echo "create user admin"
 useradd -m -s /bin/zsh -G sudo admin
-echo admin:123 | chpasswd
 ################################################################################
     """
     ACTION_MODIFY_ADMIN = """
@@ -126,8 +125,9 @@ chown admin:admin /home/app /home/src /home/ctf /home/ml /home/docker
     """
     ACTION_INSTALL_OH_MY_ZSH = """
 ################################################################################
-wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O /tmp/omz.sh
-su - admin -c "sh /tmp/omz.sh"
+# wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O /tmp/omz.sh
+# su - admin -c "sh /tmp/omz.sh"
+su - admin -c "{BASE}/.external/oh_my_zsh.sh"
 ################################################################################
     """
     ACTION_CONFIG_SYSTEM = """
@@ -147,6 +147,8 @@ systemctl set-default multi-user.target
 ################################################################################
 curl -fsSL https://mirrors.huaweicloud.com/docker-ce/linux/ubuntu/gpg | apt-key add - 
 add-apt-repository "deb [arch=amd64] https://mirrors.huaweicloud.com/docker-ce/linux/ubuntu focal stable"
+apt update
+apt install -y docker-ce
 systemctl enable docker
 systemctl start docker
 groupadd docker
@@ -155,18 +157,18 @@ usermod -aG docker admin
     """
     ACTION_INSTALL_CTF_TOOLS = """
 ################################################################################
-su - admin -c "python ../.external/ctf-tools-setup.py"
+su - admin -c "python {BASE}/.external/ctf-tools-setup.py"
 ################################################################################
     """
     ACTION_INSTALL_RUST = """
 ################################################################################
-su - admin -c "python ../.external/rust-setup.py"
+su - admin -c "python {BASE}/.external/rust-setup.py"
 ################################################################################
     """
     ACTION_INSTALL_IDA = """
 ################################################################################
 su - admin -c "mkdir /home/app/ida -p"
-su - admin -c "cp ../.external/ida/* /home/app/ida"
+su - admin -c "cp {BASE}/.external/ida/* /home/app/ida"
 su - admin -c "chmod 755 /home/app/ida/*"
 ################################################################################
     """
@@ -224,29 +226,30 @@ class Action:
         try:
             sources_list = Script.DATA_SOURCES_LIST.strip().encode()
             open("/etc/apt/sources.list", "wb").write(sources_list)
-            Script.run(Script.ACTION_CHANGE_APT_SOURCE)
+            return Script.run(Script.ACTION_CHANGE_APT_SOURCE)
         except Exception as e:
             print(e)
+            return -1
 
     @staticmethod
     def a01_apt_install_base():
-        Script.run(Script.ACTION_APT_INSTALL_BASE)
+        return Script.run(Script.ACTION_APT_INSTALL_BASE)
 
     @staticmethod
     def a02_apt_install_c_base():
-        Script.run(Script.ACTION_APT_INSTALL_C_BASE)
+        return Script.run(Script.ACTION_APT_INSTALL_C_BASE)
 
     @staticmethod
     def a03_apt_install_jdk():
-        Script.run(Script.ACTION_APT_INSTALL_JDK)
+        return Script.run(Script.ACTION_APT_INSTALL_JDK)
 
     @staticmethod
     def a04_apt_install_php():
-        Script.run(Script.ACTION_APT_INSTALL_PHP)
+        return Script.run(Script.ACTION_APT_INSTALL_PHP)
 
     @staticmethod
     def a05_apt_install_go():
-        Script.run(Script.ACTION_APT_INSTALL_GO)
+        return Script.run(Script.ACTION_APT_INSTALL_GO)
 
     @staticmethod
     def a06_install_python():
@@ -255,120 +258,124 @@ class Action:
             open("/root/.pip/pip.conf", "wb").write(Script.DATA_PIP_CONF.strip().encode())
         except Exception as e:
             print(e)
+            return -1
         try:
             os.makedirs("/home/admin/.pip", 0o755)
             os.chown("/home/admin/.pip", 1000, 1000)
             open("/home/admin/.pip/pip.conf", "wb").write(Script.DATA_PIP_CONF.strip().encode())
         except Exception as e:
             print(e)
-        Script.run(Script.ACTION_INSTALL_PYTHON)
+            return -1
+        return Script.run(Script.ACTION_INSTALL_PYTHON)
 
     @staticmethod
     def a07_install_py_lib():
-        Script.run(Script.ACTION_PIP_INSTALL_PYTHON_LIB)
+        return Script.run(Script.ACTION_PIP_INSTALL_PYTHON_LIB)
 
     @staticmethod
     def a08_user_admin():
         """ 如果uid=1000的用户不是admin，则直接替换用户名 """
         def replace(old_name):
-            on = old_name.strip().encode()
-            prefix = "{}:x:1000:1000:".format(old_name.strip()).encode()
-            lines = open("/etc/passwd", "rb").readlines()
-            buffer = []
-            for line in lines:
-                pl = line
-                if prefix in line:
-                    pl = b"admin:x:1000:1000::/home/admin:/bin/zsh\n"
-                buffer.append(pl)
-            open("/etc/passwd", "wb").writelines(buffer)
-            lines = open("/etc/group", "rb").readlines()
-            buffer = []
-            for line in lines:
-                gl = line
-                a = line.split(b":")
-                if len(a) == 4:
-                    b = a[3].split(b",")
-                    bs = [x.strip() for x in b]
-                    if on in bs:
-                        idx = bs.index(on)
-                        b[idx] = b"admin"
-                        a[3] = b",".join(b)
-                        gl = b":".join(a)
-                buffer.append(gl)
-            open("/etc/group", "wb").writelines(buffer)
+            try:
+                on = old_name.strip().encode()
+                prefix = "{}:x:1000:1000:".format(old_name.strip()).encode()
+                lines = open("/etc/passwd", "rb").readlines()
+                buffer = []
+                for line in lines:
+                    pl = line
+                    if prefix in line:
+                        pl = b"admin:x:1000:1000::/home/admin:/bin/zsh\n"
+                    buffer.append(pl)
+                open("/etc/passwd", "wb").writelines(buffer)
+                lines = open("/etc/group", "rb").readlines()
+                buffer = []
+                for line in lines:
+                    gl = line
+                    a = line.split(b":")
+                    if len(a) == 4:
+                        b = a[3].split(b",")
+                        bs = [x.strip() for x in b]
+                        if on in bs:
+                            idx = bs.index(on)
+                            b[idx] = b"admin"
+                            a[3] = b",".join(b)
+                            gl = b":".join(a)
+                    buffer.append(gl)
+                open("/etc/group", "wb").writelines(buffer)
+            except Exception as e:
+                print(e)
+                return -1
+            return 1
 
         username = Detect.user1000()
         if username is None:
-            Script.run(Script.ACTION_CREATE_ADMIN)
+            ret = Script.run(Script.ACTION_CREATE_ADMIN) >= 0
+            if ret <= 0:
+                return ret
         elif username != "admin":
-            replace(username)
-            Script.run(Script.ACTION_MODIFY_ADMIN)
-        Script.run(Script.ACTION_CREATE_WORK_DIR)
+            ret = replace(username)
+            if ret <= 0:
+                return ret
+        ret = Script.run(Script.ACTION_MODIFY_ADMIN)
+        if ret <= 0:
+            return ret
+        return Script.run(Script.ACTION_CREATE_WORK_DIR)
 
     @staticmethod
     def a09_install_oh_my_zsh():
-        ret = Script.run(Script.ACTION_INSTALL_OH_MY_ZSH)
-        if ret >= 0:
-            z = open("/home/admin/.zshrc").read()
-            
-        # TODO: config ~/.zshrc
+        rc = "/home/admin/.zshrc"
+        ret = Script.run(Script.ACTION_INSTALL_OH_MY_ZSH.format(BASE=BASE))
+        try:
+            if ret >= 0:
+                z = open(rc, "rb").read().decode()
+                if "umask 022" not in z:
+                    z += "\n\nunsetopt share_history\nunsetopt inc_append_history\numask 022\n"
+                open(rc, "w").write(z)
+        except Exception as e:
+            print(e)
+            return -1
+        return ret
 
     @staticmethod
     def a10_config_system():
-        return script
-
+        return Script.run(Script.ACTION_CONFIG_SYSTEM)
 
     @staticmethod
     def a11_install_docker():
-        # TODO: config docker mirrors
-        return script
-
+        ret = Script.run(Script.ACTION_INSTALL_DOCKER)
+        if ret >= 0:
+            try:
+                c = {
+                    "registry-mirrors": [
+                        "https://dockerhub.azk8s.cn",
+                        "https://reg-mirror.qiniu.com",
+                    ]
+                }
+                c = json.dumps(c)
+                open("/etc/docker/daemon.json", "wb").write(c.encode())
+            except Exception as e:
+                print(e)
+                return -1
+        return ret
 
     @staticmethod
     def a12_install_ctf_tools():
-        return script
-
+        script = Script.ACTION_INSTALL_CTF_TOOLS.format(BASE=BASE)
+        return Script.run(script)
 
     @staticmethod
     def a13_install_rust():
-        return script
+        script = Script.ACTION_INSTALL_RUST.format(BASE=BASE)
+        return Script.run(script)
 
     @staticmethod
     def a14_install_ida():
-        script = """
-
-"""
-        return script
+        script = Script.ACTION_INSTALL_IDA.format(BASE=BASE)
+        return Script.run(script)
 
     @staticmethod
     def a15_install_other():
-        return ""
-
-
-class Config:
-    @staticmethod
-    def c00_config_zsh():
-        p = "/home/admin/.zshrc"
-        c = open(p, "rb").read()
-        if b"share_history" in c and b"inc_append_history" in c:
-            return
-        c += b"\n\nunsetopt share_history\nunsetopt inc_append_history\numask 022\n"
-        open(p, "wb").write(c)
-
-
-    @staticmethod
-    def c01_config_docker():
-        c = {
-            "registry-mirrors": [
-                "https://dockerhub.azk8s.cn",
-                "https://reg-mirror.qiniu.com",
-            ]
-        }
-        c = json.dumps(c)
-        open("/etc/docker/daemon.json", "wb").write(c.encode())
-
-
-
+        return 0
 
 
 def main():
@@ -381,7 +388,7 @@ def main():
         Action.a05_apt_install_go,
         Action.a06_install_python,
         Action.a07_install_py_lib,
-        Action.a08_create_user_admin,
+        Action.a08_user_admin(),
         Action.a09_install_oh_my_zsh,
         Action.a10_config_system,
         Action.a11_install_docker,
@@ -390,11 +397,7 @@ def main():
         Action.a14_install_ida,
         Action.a15_install_other,
     )
-    configs = (
-        Config.c00_config_zsh,
-        Config.c01_config_docker,
-    )
-    to_shell_script(Action.a00_change_apt_source())
+    actions[0]()
 
 
 if __name__ == "__main__":
