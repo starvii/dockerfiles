@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# usage:
-
 
 from __future__ import print_function
+import base64
+import json
 import os
 from os import path
-import json
-import base64
-import hashlib
 
-class Check:
+BASE = path.split(path.abspath(__file__))[0]
+
+
+class Detect:
     @staticmethod
     def bash():
         """ 检测bash是否存在。已无必要，因为不需要使用echo -e功能 """
@@ -26,135 +26,78 @@ class Check:
         """ uid == 1000 的用户的用户名 """
         lines = open("/etc/passwd", "rb").readlines()
         lines = [line.strip() for line in lines if b"x:1000:1000:" in line]
-        assert len(lines) == 1
+        if len(lines) == 0:
+            return None
         username = lines[0].split(b":")[0].decode()
         return username
 
 
-class Action:
-# 00 change apt source & apt update & apt upgrade -y
-# 01 apt install <base: net-tools open-vm-tools openssh-server vim git pkg-config>
-# 02 apt install <c-base: build-essential cmake automake>
-# 03 apt install <jdk11>
-# 04 apt install <php-base>
-# 05 apt install <golang>
-# 06 apt install <python: change pipy source and *python2-pip>
-# 07 python lib: 
-# 08 apt install zsh and oh-my-zsh
-# 09 create admin user
-# 10 config system
-# 11 docker
-# 12 ctf-tools
-# 13 rust
-# 14 ida
-# 15 other tools
-# 
-# c00 config_zsh
-# c01 config_docker
+class Script:
+    DATA_SOURCES_LIST = """
+deb https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
+deb-src https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
 
-    @staticmethod
-    def a00_change_apt_source():
-        try:
-            SOURCES_LIST = """
-    deb https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
-    deb-src https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
+# deb https://mirrors.huaweicloud.com/kali kali-rolling main non-free contrib
+# deb-src https://mirrors.huaweicloud.com/kali kali-rolling main non-free contrib
 
-    # deb https://mirrors.huaweicloud.com/kali kali-rolling main non-free contrib
-    # deb-src https://mirrors.huaweicloud.com/kali kali-rolling main non-free contrib
-
-    # deb https://mirrors.ustc.edu.cn/kali kali-rolling main non-free contrib
-    # deb-src https://mirrors.ustc.edu.cn/kali kali-rolling main non-free contrib
+# deb https://mirrors.ustc.edu.cn/kali kali-rolling main non-free contrib
+# deb-src https://mirrors.ustc.edu.cn/kali kali-rolling main non-free contrib
     """
-            sources_list = SOURCES_LIST.strip().encode()
-            open("/etc/apt/sources.list", "wb").write(sources_list)
-        except Exception as e:
-            print(e)
-        script = """
+    ACTION_CHANGE_APT_SOURCE = """
 ################################################################################
 echo "change apt source and update"
 apt update
 apt upgrade -y --fix-missing
 ################################################################################
-"""
-        return script
-
-    @staticmethod
-    def a01_apt_install_base():
-        script = """
+    """
+    ACTION_APT_INSTALL_BASE = """
 ################################################################################
 apt install -y net-tools open-vm-tools openssh-server
 apt install -y zsh vim git wget curl pkg-config aria2c
 ################################################################################
-"""
-        return script
-
-    @staticmethod
-    def a02_apt_install_c_base():
-        script = """
+    """
+    ACTION_APT_INSTALL_C_BASE = """
 ################################################################################
 apt install -y build-essential cmake automake
 apt install -y musl-tools gcc-multilib g++-multilib
 ################################################################################
-"""
-        return script
-
-    @staticmethod
-    def a03_apt_install_jdk():
-        script = """
+    """
+    ACTION_APT_INSTALL_JDK = """
 ################################################################################
 apt install -y openjdk-14-jdk
 ################################################################################
-"""
-        return script
-
-    @staticmethod
-    def a04_apt_install_php():
-        script = """
+    """
+    ACTION_APT_INSTALL_PHP = """
 ################################################################################
 apt install -y mariadb-server php php-mysql apache2
 ################################################################################
-"""
-        return script
-
-    @staticmethod
-    def a05_apt_install_golang():
-        script = """
+    """
+    ACTION_APT_INSTALL_GO = """
 ################################################################################
 apt install -y golang
 ################################################################################
-"""
-        return script
-
-    @staticmethod
-    def a06_install_python():
-        pip_conf = """
+    """
+    DATA_PIP_CONF = """
 [global]
 index-url = https://mirrors.huaweicloud.com/repository/pypi/simple
 trusted-host = mirrors.huaweicloud.com
 timeout = 120
-"""
-        os.makedirs("/root/.pip", 0o755)
-        os.makedirs("/home/admin/.pip", 0o755)
-        os.chown("/home/admin/.pip", 1000, 1000)
-        open("/root/.pip/pip.conf", "wb").write(pip_conf.strip().encode())
-        open("/home/admin/.pip/pip.conf", "wb").write(pip_conf.strip().encode())
-        script = """
+    """
+    ACTION_INSTALL_PYTHON = """
 ################################################################################
 apt install -y python python3 python3-pip
-# wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py
-# python2 /tmp/get-pip.py
+# because there is no python-pip in apt now
+### wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py
+### python2 /tmp/get-pip.py
 python2 ../.external/get-pip.py
 ################################################################################
-"""
-        return script
-
-    @staticmethod
-    def a07_install_py_lib():
-        script = """
+    """
+    ACTION_PIP_INSTALL_PYTHON_LIB = """
 ################################################################################
 apt install -y libpython-dev libssl-dev libmpfr-dev libmpc-dev
 python2 -m pip install -U pip setuptools
-# python2 -m pip install -U pwntools
+# it seems some dependencies of python2 are deprecated.
+### python2 -m pip install -U pwntools
 python2 -m pip uninstall crypto pycrypto
 python2 -m pip install -U pycrypto gmpy
 python3 -m pip install -U pip setuptools
@@ -162,43 +105,32 @@ python3 -m pip uninstall crypto pycrypto
 python3 -m pip install -U pycrypto gmpy2 uncompyle6 pwntools
 python3 -m pip install -U requests aiohttp lxml beautifulsoup4 tornado
 ################################################################################
-"""
-        return script
-
-    @staticmethod
-    def a08_create_user_admin():
-        """ 如果uid=1000的用户不是admin，则删除再新建 """
-        script = """
+    """
+    ACTION_CREATE_ADMIN = """
 ################################################################################
 echo "create user admin"
-userdel {username}
-rm -rf /home/{username}
 useradd -m -s /bin/zsh -G sudo admin
 echo admin:123 | chpasswd
+################################################################################
+    """
+    ACTION_MODIFY_ADMIN = """
+################################################################################
+echo admin:123 | chpasswd
+################################################################################
+    """
+    ACTION_CREATE_WORK_DIR = """
+################################################################################
 mkdir /home/app /home/src /home/ctf /home/ml /home/docker
 chown admin:admin /home/app /home/src /home/ctf /home/ml /home/docker
 ################################################################################
-"""
-        username = Check.username()
-        if username != "admin":
-            return ""
-        else:
-            return script.format(username=username)
-
-    @staticmethod
-    def a09_install_oh_my_zsh():
-        script = """
+    """
+    ACTION_INSTALL_OH_MY_ZSH = """
 ################################################################################
 wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O /tmp/omz.sh
 su - admin -c "sh /tmp/omz.sh"
 ################################################################################
-"""
-        # TODO: config ~/.zshrc
-        return script
-
-    @staticmethod
-    def a10_config_system():
-        script = """
+    """
+    ACTION_CONFIG_SYSTEM = """
 ################################################################################
 systemctl stop nginx
 systemctl disable nginx
@@ -210,13 +142,8 @@ systemctl enable ssh
 systemctl start ssh
 systemctl set-default multi-user.target
 ################################################################################
-"""
-        return script
-
-
-    @staticmethod
-    def a11_install_docker():
-        script = """
+    """
+    ACTION_INSTALL_DOCKER = """
 ################################################################################
 curl -fsSL https://mirrors.huaweicloud.com/docker-ce/linux/ubuntu/gpg | apt-key add - 
 add-apt-repository "deb [arch=amd64] https://mirrors.huaweicloud.com/docker-ce/linux/ubuntu focal stable"
@@ -225,38 +152,191 @@ systemctl start docker
 groupadd docker
 usermod -aG docker admin
 ################################################################################
-"""
+    """
+    ACTION_INSTALL_CTF_TOOLS = """
+################################################################################
+su - admin -c "python ../.external/ctf-tools-setup.py"
+################################################################################
+    """
+    ACTION_INSTALL_RUST = """
+################################################################################
+su - admin -c "python ../.external/rust-setup.py"
+################################################################################
+    """
+    ACTION_INSTALL_IDA = """
+################################################################################
+su - admin -c "mkdir /home/app/ida -p"
+su - admin -c "cp ../.external/ida/* /home/app/ida"
+su - admin -c "chmod 755 /home/app/ida/*"
+################################################################################
+    """
+
+    @staticmethod
+    def run(script, filename=None):
+        lines = script.split("\n")
+        buffer = []
+        first = True
+        for line in lines:
+            ls = line.strip()
+            if len(ls) == 0:
+                buffer.append("\n" + line)
+            elif ls.startswith("#"):
+                buffer.append("\n" + line)
+            elif first:
+                first = False
+                buffer.append("\n" + line)
+            else:
+                buffer.append(" \\\n&& " + line)
+        shell_script = "".join(buffer)
+        if filename is None:
+            filename = "/tmp/" + base64.b32encode(os.urandom(10)).decode().lower() + ".sh"
+        print(filename)
+        open(filename, "wb").write(shell_script.encode().strip())
+        os.system("cat {}".format(filename))
+        ret = os.system("sh {}".format(filename))
+        os.system("rm -rf {}".format(filename))
+        return ret
+
+
+class Action:
+    # 00 change apt source & apt update & apt upgrade -y
+    # 01 apt install <base: net-tools open-vm-tools openssh-server vim git pkg-config>
+    # 02 apt install <c-base: build-essential cmake automake>
+    # 03 apt install <jdk11>
+    # 04 apt install <php-base>
+    # 05 apt install <golang>
+    # 06 apt install <python: change pipy source and *python2-pip>
+    # 07 python lib:
+    # 08 apt install zsh and oh-my-zsh
+    # 09 create admin user
+    # 10 config system
+    # 11 docker
+    # 12 ctf-tools
+    # 13 rust
+    # 14 ida
+    # 15 other tools
+    #
+    # c00 config_zsh
+    # c01 config_docker
+
+    @staticmethod
+    def a00_change_apt_source():
+        try:
+            sources_list = Script.DATA_SOURCES_LIST.strip().encode()
+            open("/etc/apt/sources.list", "wb").write(sources_list)
+            Script.run(Script.ACTION_CHANGE_APT_SOURCE)
+        except Exception as e:
+            print(e)
+
+    @staticmethod
+    def a01_apt_install_base():
+        Script.run(Script.ACTION_APT_INSTALL_BASE)
+
+    @staticmethod
+    def a02_apt_install_c_base():
+        Script.run(Script.ACTION_APT_INSTALL_C_BASE)
+
+    @staticmethod
+    def a03_apt_install_jdk():
+        Script.run(Script.ACTION_APT_INSTALL_JDK)
+
+    @staticmethod
+    def a04_apt_install_php():
+        Script.run(Script.ACTION_APT_INSTALL_PHP)
+
+    @staticmethod
+    def a05_apt_install_go():
+        Script.run(Script.ACTION_APT_INSTALL_GO)
+
+    @staticmethod
+    def a06_install_python():
+        try:
+            os.makedirs("/root/.pip", 0o755)
+            open("/root/.pip/pip.conf", "wb").write(Script.DATA_PIP_CONF.strip().encode())
+        except Exception as e:
+            print(e)
+        try:
+            os.makedirs("/home/admin/.pip", 0o755)
+            os.chown("/home/admin/.pip", 1000, 1000)
+            open("/home/admin/.pip/pip.conf", "wb").write(Script.DATA_PIP_CONF.strip().encode())
+        except Exception as e:
+            print(e)
+        Script.run(Script.ACTION_INSTALL_PYTHON)
+
+    @staticmethod
+    def a07_install_py_lib():
+        Script.run(Script.ACTION_PIP_INSTALL_PYTHON_LIB)
+
+    @staticmethod
+    def a08_user_admin():
+        """ 如果uid=1000的用户不是admin，则直接替换用户名 """
+        def replace(old_name):
+            on = old_name.strip().encode()
+            prefix = "{}:x:1000:1000:".format(old_name.strip()).encode()
+            lines = open("/etc/passwd", "rb").readlines()
+            buffer = []
+            for line in lines:
+                pl = line
+                if prefix in line:
+                    pl = b"admin:x:1000:1000::/home/admin:/bin/zsh\n"
+                buffer.append(pl)
+            open("/etc/passwd", "wb").writelines(buffer)
+            lines = open("/etc/group", "rb").readlines()
+            buffer = []
+            for line in lines:
+                gl = line
+                a = line.split(b":")
+                if len(a) == 4:
+                    b = a[3].split(b",")
+                    bs = [x.strip() for x in b]
+                    if on in bs:
+                        idx = bs.index(on)
+                        b[idx] = b"admin"
+                        a[3] = b",".join(b)
+                        gl = b":".join(a)
+                buffer.append(gl)
+            open("/etc/group", "wb").writelines(buffer)
+
+        username = Detect.user1000()
+        if username is None:
+            Script.run(Script.ACTION_CREATE_ADMIN)
+        elif username != "admin":
+            replace(username)
+            Script.run(Script.ACTION_MODIFY_ADMIN)
+        Script.run(Script.ACTION_CREATE_WORK_DIR)
+
+    @staticmethod
+    def a09_install_oh_my_zsh():
+        ret = Script.run(Script.ACTION_INSTALL_OH_MY_ZSH)
+        if ret >= 0:
+            z = open("/home/admin/.zshrc").read()
+            
+        # TODO: config ~/.zshrc
+
+    @staticmethod
+    def a10_config_system():
+        return script
+
+
+    @staticmethod
+    def a11_install_docker():
         # TODO: config docker mirrors
         return script
 
 
     @staticmethod
     def a12_install_ctf_tools():
-        script = """
-################################################################################
-su - admin -c "python ../.external/ctf-tools-setup.py"
-################################################################################
-"""
         return script
 
 
     @staticmethod
     def a13_install_rust():
-        script = """
-################################################################################
-su - admin -c "python ../.external/rust-setup.py"
-################################################################################
-"""
         return script
 
     @staticmethod
     def a14_install_ida():
         script = """
-################################################################################
-su - admin -c "mkdir /home/app/ida -p"
-su - admin -c "cp ../.external/ida/* /home/app/ida"
-su - admin -c "chmod 755 /home/app/ida/*"
-################################################################################
+
 """
         return script
 
@@ -285,31 +365,11 @@ class Config:
             ]
         }
         c = json.dumps(c)
-        open("/etc/docker/daemon.json", "wb").write(c)
+        open("/etc/docker/daemon.json", "wb").write(c.encode())
 
 
-def to_shell_script(script, filename=None):
-    lines = script.split("\n")
-    buffer = []
-    first = True
-    for line in lines:
-        l = line.strip()
-        if len(l) == 0:
-            buffer.append("\n" + line)
-        elif l.startswith("#"):
-            buffer.append("\n" + line)
-        elif first:
-            first = False
-            buffer.append("\n" + line)
-        else:
-            buffer.append(" \\\n&& " + line)
-    shell_script = "".join(buffer)
-    if filename is None:
-        filename = "/tmp/" + base64.b32encode(os.urandom(10)).decode().lower() + ".sh"
-    print(filename)
-    open(filename, "wb").write(shell_script.encode().strip())
-    # os.system("sh {filename}".format(filename=filename))
-    # os.system("rm -rf {filename}".format(filename=filename))
+
+
 
 def main():
     actions = (
@@ -318,7 +378,7 @@ def main():
         Action.a02_apt_install_c_base,
         Action.a03_apt_install_jdk,
         Action.a04_apt_install_php,
-        Action.a05_apt_install_golang,
+        Action.a05_apt_install_go,
         Action.a06_install_python,
         Action.a07_install_py_lib,
         Action.a08_create_user_admin,
