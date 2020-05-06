@@ -31,18 +31,36 @@ class Detect:
         username = lines[0].split(b":")[0].decode()
         return username
 
+    @staticmethod
+    def code_name():
+        try:
+            lines = open("/etc/lsb-release", "rb").readlines()
+            for line in lines:
+                ln = line.strip()
+                if ln.startswith(b"DISTRIB_CODENAME"):
+                    a = ln.split(b"=")
+                    return a[0].strip().decode()
+        except Exception as e:
+            print(e)
+            return None
+
 
 class Script:
     DATA_SOURCES_LIST = """
-deb https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
-deb-src https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
-
-# deb https://mirrors.huaweicloud.com/kali kali-rolling main non-free contrib
-# deb-src https://mirrors.huaweicloud.com/kali kali-rolling main non-free contrib
-
-# deb https://mirrors.ustc.edu.cn/kali kali-rolling main non-free contrib
-# deb-src https://mirrors.ustc.edu.cn/kali kali-rolling main non-free contrib
+deb {URL} {CODE_NAME} main restricted universe multiverse
+deb {URL} {CODE_NAME}-security main restricted universe multiverse
+deb {URL} {CODE_NAME}-updates main restricted universe multiverse
+#deb {URL} {CODE_NAME}-proposed main restricted universe multiverse
+#deb {URL} {CODE_NAME}-backports main restricted universe multiverse
+deb-src {URL} {CODE_NAME} main restricted universe multiverse
+deb-src {URL} {CODE_NAME}-security main restricted universe multiverse
+deb-src {URL} {CODE_NAME}-updates main restricted universe multiverse
+#deb-src {URL} {CODE_NAME}-proposed main restricted universe multiverse
+#deb-src {URL} {CODE_NAME}-backports main restricted universe multiverse
     """
+    DATA_SOURCES_LIST_URLS = (
+        "https://mirrors.cloud.tencent.com/ubuntu/",
+    )
     ACTION_CHANGE_APT_SOURCE = """
 ################################################################################
 echo "change apt source and update"
@@ -53,7 +71,7 @@ apt upgrade -y --fix-missing
     ACTION_APT_INSTALL_BASE = """
 ################################################################################
 apt install -y net-tools open-vm-tools openssh-server
-apt install -y zsh vim git wget curl pkg-config aria2c
+apt install -y zsh vim git wget curl pkg-config aria2
 ################################################################################
     """
     ACTION_APT_INSTALL_C_BASE = """
@@ -193,11 +211,14 @@ su - admin -c "chmod 755 /home/app/ida/*"
         if filename is None:
             filename = "/tmp/" + base64.b32encode(os.urandom(10)).decode().lower() + ".sh"
         print(filename)
-        open(filename, "wb").write(shell_script.encode().strip())
+        open(filename, "wb").write(shell_script.encode().strip() + b"\n\n")
         os.system("cat {}".format(filename))
         ret = os.system("sh {}".format(filename))
-        os.system("rm -rf {}".format(filename))
+        ### os.system("rm -rf {}".format(filename))
         return ret
+
+    @staticmethod
+    def sources_list(url=""):
 
 
 class Action:
@@ -388,7 +409,7 @@ def main():
         Action.a05_apt_install_go,
         Action.a06_install_python,
         Action.a07_install_py_lib,
-        Action.a08_user_admin(),
+        Action.a08_user_admin,
         Action.a09_install_oh_my_zsh,
         Action.a10_config_system,
         Action.a11_install_docker,
@@ -397,7 +418,9 @@ def main():
         Action.a14_install_ida,
         Action.a15_install_other,
     )
-    actions[0]()
+    # actions[0]()
+    # actions[1]()
+    actions[2]()
 
 
 if __name__ == "__main__":
