@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# TODO: 安装中文环境、配置字体
+
 from __future__ import print_function
 import base64
 import json
@@ -8,6 +10,7 @@ import os
 from os import path
 
 BASE = path.dirname(path.dirname(path.abspath(__file__)))
+PYTHON = "python3" if path.exists("/usr/bin/python3") else "python"
 
 
 class Detect:
@@ -39,7 +42,7 @@ class Detect:
                 ln = line.strip()
                 if ln.startswith(b"DISTRIB_CODENAME"):
                     a = ln.split(b"=")
-                    return a[0].strip().decode()
+                    return a[1].strip().decode()
         except Exception as e:
             print(e)
             return None
@@ -48,19 +51,20 @@ class Detect:
 class Script:
     DATA_SOURCES_LIST = """
 deb {URL} {CODE_NAME} main restricted universe multiverse
-deb {URL} {CODE_NAME}-security main restricted universe multiverse
-deb {URL} {CODE_NAME}-updates main restricted universe multiverse
-#deb {URL} {CODE_NAME}-proposed main restricted universe multiverse
-#deb {URL} {CODE_NAME}-backports main restricted universe multiverse
 deb-src {URL} {CODE_NAME} main restricted universe multiverse
+
+deb {URL} {CODE_NAME}-security main restricted universe multiverse
 deb-src {URL} {CODE_NAME}-security main restricted universe multiverse
+
+deb {URL} {CODE_NAME}-updates main restricted universe multiverse
 deb-src {URL} {CODE_NAME}-updates main restricted universe multiverse
-#deb-src {URL} {CODE_NAME}-proposed main restricted universe multiverse
-#deb-src {URL} {CODE_NAME}-backports main restricted universe multiverse
+
+deb {URL} {CODE_NAME}-proposed main restricted universe multiverse
+deb-src {URL} {CODE_NAME}-proposed main restricted universe multiverse
+
+deb {URL} {CODE_NAME}-backports main restricted universe multiverse
+deb-src {URL} {CODE_NAME}-backports main restricted universe multiverse
     """
-    DATA_SOURCES_LIST_URLS = (
-        "https://mirrors.cloud.tencent.com/ubuntu/",
-    )
     ACTION_CHANGE_APT_SOURCE = """
 ################################################################################
 echo "change apt source and update"
@@ -107,7 +111,7 @@ apt install -y python python3 python3-pip
 # because there is no python-pip in apt now
 ### wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py
 ### python2 /tmp/get-pip.py
-python2 ../.external/get-pip.py
+python2 /tmp/get-pip.py
 ################################################################################
     """
     ACTION_PIP_INSTALL_PYTHON_LIB = """
@@ -190,6 +194,11 @@ su - admin -c "cp {BASE}/.external/ida/* /home/app/ida"
 su - admin -c "chmod 755 /home/app/ida/*"
 ################################################################################
     """
+    ACTION_INSTALL_FONTS = """
+################################################################################
+
+################################################################################
+    """
 
     @staticmethod
     def run(script, filename=None):
@@ -218,7 +227,9 @@ su - admin -c "chmod 755 /home/app/ida/*"
         return ret
 
     @staticmethod
-    def sources_list(url=""):
+    def sources_list(url="https://mirrors.aliyun.com/ubuntu/"):
+        code_name = Detect.code_name()
+        return Script.DATA_SOURCES_LIST.format(URL=url, CODE_NAME=code_name).strip()
 
 
 class Action:
@@ -245,8 +256,9 @@ class Action:
     @staticmethod
     def a00_change_apt_source():
         try:
-            sources_list = Script.DATA_SOURCES_LIST.strip().encode()
-            open("/etc/apt/sources.list", "wb").write(sources_list)
+            # sources_list = Script.DATA_SOURCES_LIST.strip().encode()
+            sl = Script.sources_list().encode()
+            open("/etc/apt/sources.list", "wb").write(sl)
             return Script.run(Script.ACTION_CHANGE_APT_SOURCE)
         except Exception as e:
             print(e)
@@ -287,6 +299,13 @@ class Action:
         except Exception as e:
             print(e)
             return -1
+        if path.exists("{BASE}/.external/get-pip.py".format(BASE=BASE)):
+            cmd = "cp {BASE}/.external/get-pip.py /tmp/get-pip.py"
+        else:
+            cmd = "wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py"
+        ret = os.system(cmd)
+        if ret < 0:
+            return ret
         return Script.run(Script.ACTION_INSTALL_PYTHON)
 
     @staticmethod
@@ -420,7 +439,11 @@ def main():
     )
     # actions[0]()
     # actions[1]()
-    actions[2]()
+    # actions[2]()
+    # actions[3]()
+    # actions[4]()
+    # actions[5]()
+    actions[6]()
 
 
 if __name__ == "__main__":
