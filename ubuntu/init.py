@@ -4,10 +4,14 @@
 # TODO: 安装中文环境、配置字体
 
 from __future__ import print_function
-import base64
 import json
 import os
 from os import path
+import sys
+
+if sys.version_info < (3, 0):
+    input = raw_input
+    range = xrange
 
 BASE = path.dirname(path.dirname(path.abspath(__file__)))
 PYTHON = "python3" if path.exists("/usr/bin/python3") else "python"
@@ -67,7 +71,6 @@ deb-src {URL} {CODE_NAME}-backports main restricted universe multiverse
     """
     ACTION_CHANGE_APT_SOURCE = """
 ################################################################################
-echo "change apt source and update"
 apt update
 apt upgrade -y --fix-missing
 ################################################################################
@@ -201,30 +204,39 @@ su - admin -c "chmod 755 /home/app/ida/*"
     """
 
     @staticmethod
-    def run(script, filename=None):
+    def run(script):
         lines = script.split("\n")
         buffer = []
-        first = True
+        ret = 0
         for line in lines:
-            ls = line.strip()
-            if len(ls) == 0:
-                buffer.append("\n" + line)
-            elif ls.startswith("#"):
-                buffer.append("\n" + line)
-            elif first:
-                first = False
-                buffer.append("\n" + line)
+            ln = line.strip()
+            if ln.startswith("#"):
+                sys.stdout.write(line.rstrip() + "\n")
+                continue
+            if ln.endswith("\\") and not ln.endswith("\\\\"):
+                buffer.append(line.rstrip())
             else:
-                buffer.append(" \\\n&& " + line)
-        shell_script = "".join(buffer)
-        if filename is None:
-            filename = "/tmp/" + base64.b32encode(os.urandom(10)).decode().lower() + ".sh"
-        print(filename)
-        open(filename, "wb").write(shell_script.encode().strip() + b"\n\n")
-        os.system("cat {}".format(filename))
-        ret = os.system("sh {}".format(filename))
-        ### os.system("rm -rf {}".format(filename))
+                if len(buffer) == 0:
+                    cmd = line.rstrip()
+                else:
+                    cmd = "\n".join(buffer)
+                    buffer = []
+                Script.print_notice(cmd)
+                ret = os.system(cmd)
+                if ret < 0:
+                    Script.print_error(cmd)
+                    break
         return ret
+
+    @staticmethod
+    def print_notice(out):
+        tpl = "\033[1;33m{out}\033[0m\n".format(out=out)
+        sys.stdout.write(tpl)
+
+    @staticmethod
+    def print_error(out):
+        tpl = "\033[5;31m{err}\033[0m: Some error in:\n\033[4m{out}\033[0m\n".format(err="Error", out=out)
+        sys.stderr.write(tpl)
 
     @staticmethod
     def sources_list(url="https://mirrors.aliyun.com/ubuntu/"):
@@ -287,23 +299,24 @@ class Action:
     @staticmethod
     def a06_install_python():
         try:
-            os.makedirs("/root/.pip", 0o755)
+            if not path.isdir("/root/.pip"):
+                os.makedirs("/root/.pip", 0o755)
             open("/root/.pip/pip.conf", "wb").write(Script.DATA_PIP_CONF.strip().encode())
         except Exception as e:
             print(e)
-            return -1
-        try:
-            os.makedirs("/home/admin/.pip", 0o755)
-            os.chown("/home/admin/.pip", 1000, 1000)
-            open("/home/admin/.pip/pip.conf", "wb").write(Script.DATA_PIP_CONF.strip().encode())
-        except Exception as e:
-            print(e)
-            return -1
+        
+        # try:
+        #     os.makedirs("/home/admin/.pip", 0o755)
+        #     os.chown("/home/admin/.pip", 1000, 1000)
+        #     open("/home/admin/.pip/pip.conf", "wb").write(Script.DATA_PIP_CONF.strip().encode())
+        # except Exception as e:
+        #     print(e)
+        #     return -1
         if path.exists("{BASE}/.external/get-pip.py".format(BASE=BASE)):
             cmd = "cp {BASE}/.external/get-pip.py /tmp/get-pip.py"
         else:
             cmd = "wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py"
-        ret = os.system(cmd)
+        ret = Script.run(cmd)
         if ret < 0:
             return ret
         return Script.run(Script.ACTION_INSTALL_PYTHON)
