@@ -8,6 +8,7 @@ import json
 import os
 from os import path
 import sys
+from multiprocessing import Process
 
 if sys.version_info < (3, 0):
     input = raw_input
@@ -114,21 +115,31 @@ apt install -y python python3 python3-pip
 # because there is no python-pip in apt now
 ### wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py
 ### python2 /tmp/get-pip.py
-python2 /tmp/get-pip.py
+# python2 /tmp/get-pip.py
 ################################################################################
     """
     ACTION_PIP_INSTALL_PYTHON_LIB = """
 ################################################################################
-apt install -y libpython-dev libssl-dev libmpfr-dev libmpc-dev
+apt install -y libpython2-dev libpython3-all-dev libssl-dev libmpfr-dev libmpc-dev
 python2 -m pip install -U pip setuptools
 # it seems some dependencies of python2 are deprecated.
 ### python2 -m pip install -U pwntools
 python2 -m pip uninstall crypto pycrypto
-python2 -m pip install -U pycrypto gmpy
+python2 -m pip install -U pycryptodome
+python2 -m pip install -U gmpy
+python2 -m pip install -U gmpy2
 python3 -m pip install -U pip setuptools
 python3 -m pip uninstall crypto pycrypto
-python3 -m pip install -U pycrypto gmpy2 uncompyle6 pwntools
-python3 -m pip install -U requests aiohttp lxml beautifulsoup4 tornado
+python3 -m pip install -U pycryptodome
+python3 -m pip install -U gmpy
+python3 -m pip install -U gmpy2
+python3 -m pip install -U uncompyle6
+python3 -m pip install -U pwntools
+python3 -m pip install -U requests
+python3 -m pip install -U aiohttp
+python3 -m pip install -U lxml
+python3 -m pip install -U beautifulsoup4
+python3 -m pip install -U tornado
 ################################################################################
     """
     ACTION_CREATE_ADMIN = """
@@ -144,6 +155,7 @@ echo admin:123 | chpasswd
     """
     ACTION_CREATE_WORK_DIR = """
 ################################################################################
+mv /home/{old_name} /home/admin
 mkdir /home/app /home/src /home/ctf /home/ml /home/docker
 chown admin:admin /home/app /home/src /home/ctf /home/ml /home/docker
 ################################################################################
@@ -152,7 +164,7 @@ chown admin:admin /home/app /home/src /home/ctf /home/ml /home/docker
 ################################################################################
 # wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O /tmp/omz.sh
 # su - admin -c "sh /tmp/omz.sh"
-su - admin -c "{BASE}/.external/oh_my_zsh.sh"
+su - admin -c "sh /tmp/omz.sh" &
 ################################################################################
     """
     ACTION_CONFIG_SYSTEM = """
@@ -204,7 +216,7 @@ su - admin -c "chmod 755 /home/app/ida/*"
     """
 
     @staticmethod
-    def run(script):
+    def run(script, stop_if_error=True):
         lines = script.split("\n")
         buffer = []
         ret = 0
@@ -223,9 +235,11 @@ su - admin -c "chmod 755 /home/app/ida/*"
                     buffer = []
                 Script.print_notice(cmd)
                 ret = os.system(cmd)
-                if ret < 0:
+                ret = ret >> 8
+                if ret != 0:
                     Script.print_error(cmd)
-                    break
+                    if stop_if_error:
+                        break
         return ret
 
     @staticmethod
@@ -298,32 +312,30 @@ class Action:
 
     @staticmethod
     def a06_install_python():
+        def check_get_pip():
+            if path.exists("{BASE}/.external/get-pip.tgz".format(BASE=BASE)):
+                _c = "tar zxf {BASE}/.external/get-pip.tgz -C /tmp".format(BASE=BASE)
+            else:
+                _c = "wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py"
+            return _c
+
         try:
             if not path.isdir("/root/.pip"):
                 os.makedirs("/root/.pip", 0o755)
             open("/root/.pip/pip.conf", "wb").write(Script.DATA_PIP_CONF.strip().encode())
         except Exception as e:
             print(e)
-        
-        # try:
-        #     os.makedirs("/home/admin/.pip", 0o755)
-        #     os.chown("/home/admin/.pip", 1000, 1000)
-        #     open("/home/admin/.pip/pip.conf", "wb").write(Script.DATA_PIP_CONF.strip().encode())
-        # except Exception as e:
-        #     print(e)
-        #     return -1
-        if path.exists("{BASE}/.external/get-pip.py".format(BASE=BASE)):
-            cmd = "cp {BASE}/.external/get-pip.py /tmp/get-pip.py"
-        else:
-            cmd = "wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py"
-        ret = Script.run(cmd)
-        if ret < 0:
+        ret = Script.run(Script.ACTION_INSTALL_PYTHON)
+        if ret != 0:
             return ret
-        return Script.run(Script.ACTION_INSTALL_PYTHON)
+        ret = Script.run("apt install python-pip")
+        if ret != 0:
+            cmd = check_get_pip() + "\npython2 /tmp/get-pip.py\nrm -rf /tmp/get-pip.py\n"
+            return Script.run(cmd)
 
     @staticmethod
     def a07_install_py_lib():
-        return Script.run(Script.ACTION_PIP_INSTALL_PYTHON_LIB)
+        return Script.run(Script.ACTION_PIP_INSTALL_PYTHON_LIB, False)
 
     @staticmethod
     def a08_user_admin():
@@ -343,43 +355,61 @@ class Action:
                 lines = open("/etc/group", "rb").readlines()
                 buffer = []
                 for line in lines:
-                    gl = line
+                    gl = line.strip()
                     a = line.split(b":")
                     if len(a) == 4:
-                        b = a[3].split(b",")
-                        bs = [x.strip() for x in b]
-                        if on in bs:
-                            idx = bs.index(on)
-                            b[idx] = b"admin"
-                            a[3] = b",".join(b)
+                        if a[0].strip() == on:
+                            a[0] = b"admin"
                             gl = b":".join(a)
-                    buffer.append(gl)
+                        else:
+                            b = a[3].split(b",")
+                            bs = [x.strip() for x in b]
+                            if on in bs:
+                                idx = bs.index(on)
+                                b[idx] = b"admin"
+                                a[3] = b",".join(b)
+                                gl = b":".join(a)
+                    buffer.append(gl + b"\n")
                 open("/etc/group", "wb").writelines(buffer)
             except Exception as e:
                 print(e)
                 return -1
-            return 1
+            return 0
 
         username = Detect.user1000()
         if username is None:
             ret = Script.run(Script.ACTION_CREATE_ADMIN) >= 0
-            if ret <= 0:
+            if ret != 0:
                 return ret
         elif username != "admin":
             ret = replace(username)
-            if ret <= 0:
+            if ret != 0:
                 return ret
         ret = Script.run(Script.ACTION_MODIFY_ADMIN)
-        if ret <= 0:
+        if ret != 0:
             return ret
-        return Script.run(Script.ACTION_CREATE_WORK_DIR)
+        return Script.run(Script.ACTION_CREATE_WORK_DIR.format(old_name=username))
 
     @staticmethod
     def a09_install_oh_my_zsh():
-        rc = "/home/admin/.zshrc"
-        ret = Script.run(Script.ACTION_INSTALL_OH_MY_ZSH.format(BASE=BASE))
+        def get_install():
+            if path.exists("{BASE}/.external/oh_my_zsh.sh".format(BASE=BASE)):
+                _c = "cp {BASE}/.external/oh_my_zsh.sh /tmp/omz.sh".format(BASE=BASE)
+            else:
+                _c = "wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O /tmp/omz.sh"
+            return _c
+        sh = get_install()
+        ret = Script.run(sh)
+        if ret != 0:
+            return ret
+        p = Process(target=Script.run, args=(Script.ACTION_INSTALL_OH_MY_ZSH.format(BASE=BASE),))
+        # ret = Script.run(Script.ACTION_INSTALL_OH_MY_ZSH.format(BASE=BASE))
+        p.daemon = True
+        p.start()
+        p.join()
         try:
-            if ret >= 0:
+            if ret == 0:
+                rc = "/home/admin/.zshrc"
                 z = open(rc, "rb").read().decode()
                 if "umask 022" not in z:
                     z += "\n\nunsetopt share_history\nunsetopt inc_append_history\numask 022\n"
@@ -450,13 +480,22 @@ def main():
         Action.a14_install_ida,
         Action.a15_install_other,
     )
-    # actions[0]()
-    # actions[1]()
-    # actions[2]()
-    # actions[3]()
-    # actions[4]()
-    # actions[5]()
+    actions[0]()
+    actions[1]()
+    actions[2]()
+    actions[3]()
+    actions[4]()
+    actions[5]()
     actions[6]()
+    actions[7]()
+    actions[8]()
+    actions[9]()
+    # actions[10]()
+    # actions[11]()
+    # actions[12]()
+    # actions[13]()
+    # actions[14]()
+    # actions[15]()
 
 
 if __name__ == "__main__":
