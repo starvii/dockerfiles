@@ -7,7 +7,7 @@ import sys
 from os import path
 
 
-class AbstractTask:
+class AbstractTask(object):
     def __init__(self):
         raise Exception("Cannot create object from an abstract class")
 
