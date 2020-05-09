@@ -26,7 +26,7 @@ su - admin -c "sh /tmp/omz.sh"
         ret = self.get_install_script()
         if ret != 0:
             return ret
-        p = Process(target=self.run, args=(self.script,))
+        p = Process(target=self.run, args=(self.script, False))
         p.daemon = True
         p.start()
         pid = p.pid

@@ -16,6 +16,7 @@ class TaskAptInstallBase(SuperTask):
 ################################################################################
 apt install -y net-tools open-vm-tools openssh-server
 apt install -y zsh vim git wget curl pkg-config aria2
+apt install -y apt-transport-https ca-certificates gnupg2 lsb-release software-properties-common
 systemctl enable ssh
 systemctl restart ssh
 systemctl set-default multi-user.target
