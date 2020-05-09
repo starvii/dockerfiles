@@ -6,7 +6,7 @@ from os import path
 import sys
 
 INIT_SCRIPT_BASE = path.dirname(path.dirname(path.abspath(__file__)))
-sys.path.append("{}/-task-".format(INIT_SCRIPT_BASE))
+sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
 os.environ["INIT_SCRIPT_BASE"] = INIT_SCRIPT_BASE
 TASK = __import__("task".format(INIT_SCRIPT_BASE))
 

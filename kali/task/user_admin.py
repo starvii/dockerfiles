@@ -5,7 +5,7 @@ import os
 import sys
 
 INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
-sys.path.append("{}/-task-".format(INIT_SCRIPT_BASE))
+sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
 SuperTask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
 
 

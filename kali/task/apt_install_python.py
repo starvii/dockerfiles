@@ -6,7 +6,7 @@ import sys
 from os import path
 
 INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
-sys.path.append("{}/-task-".format(INIT_SCRIPT_BASE))
+sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
 SuperTask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
 
 
@@ -60,27 +60,28 @@ python3 -m pip install -U tornado
                 os.makedirs("/root/.pip", 0o755)
             open("/root/.pip/pip.conf", "wb").write(self.pip_conf.strip().encode())
         except Exception as e:
-            SuperTask.print_error(e)
-        ret = SuperTask.run(self.script)
+            self.print_error(e)
+        ret = self.run(self.script)
         if ret == 0:
             return ret
         ret = self.check_python_pip()
         if ret == 0:
             return ret
-        cmd = self.check_get_pip() + "\npython2 /tmp/get-pip.py\nrm -rf /tmp/get-pip.py\n"
-        ret = SuperTask.run(cmd)
+        ret = self.check_get_pip()
         if ret == 0:
             return ret
-        return SuperTask.run(self.script_lib)
+        cmd = "python2 /tmp/get-pip.py\nrm -rf /tmp/get-pip.py\n"
+        ret = self.run(cmd)
+        if ret == 0:
+            return ret
+        return self.run(self.script_lib)
 
-    @staticmethod
-    def check_python_pip():
-        return SuperTask.run("apt install python-pip")
+    def check_python_pip(self):
+        return self.run("apt install python-pip")
 
-    @staticmethod
-    def check_get_pip():
-        if path.exists("{BASE}/.external/get-pip.tgz".format(BASE=INIT_SCRIPT_BASE)):
-            _c = "tar zxf {BASE}/.external/get-pip.tgz -C /tmp".format(BASE=INIT_SCRIPT_BASE)
+    def check_get_pip(self):
+        if path.exists("{BASE}/_external_/get-pip.tgz".format(BASE=INIT_SCRIPT_BASE)):
+            _c = "tar zxf {BASE}/_external_/get-pip.tgz -C /tmp".format(BASE=INIT_SCRIPT_BASE)
         else:
             _c = "wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py"
-        return _c
+        return self.run(_c)

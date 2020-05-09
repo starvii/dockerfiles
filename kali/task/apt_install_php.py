@@ -3,10 +3,9 @@
 
 import os
 import sys
-from os import path
 
 INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
-sys.path.append("{}/-task-".format(INIT_SCRIPT_BASE))
+sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
 SuperTask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
 
 
@@ -27,4 +26,4 @@ systemctl disable mysql
         """
 
     def do(self):
-        return SuperTask.run(self.script)
+        return self.run(self.script)
