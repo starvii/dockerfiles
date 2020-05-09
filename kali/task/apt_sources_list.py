@@ -35,6 +35,6 @@ apt upgrade -y --fix-missing
             if not path.exists("/etc/apt/sources.list.bak"):
                 SuperTask.run("cp /etc/apt/sources.list /etc/apt/sources.list.bak")
             open("/etc/apt/sources.list", "wb").write(self.sources_list.encode())
-            return SuperTask.run(self.cmd)
+            return SuperTask.run(self.script)
         except Exception as e:
             SuperTask.print_error(e)
