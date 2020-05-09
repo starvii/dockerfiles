@@ -16,6 +16,8 @@ class TaskAptInstallBase(SuperTask):
 ################################################################################
 apt install -y net-tools open-vm-tools openssh-server
 apt install -y zsh vim git wget curl pkg-config aria2
+systemctl enable ssh
+systemctl restart ssh
 ################################################################################
         """
 

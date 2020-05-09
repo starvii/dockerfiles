@@ -25,7 +25,6 @@ echo admin:123 | chpasswd
         """
         self.script_create_work_dir = """
 ################################################################################
-mv /home/{temp_user} /home/admin
 mkdir /home/app /home/src /home/ctf /home/ml /home/docker
 chown admin:admin /home/app /home/src /home/ctf /home/ml /home/docker
 ################################################################################
