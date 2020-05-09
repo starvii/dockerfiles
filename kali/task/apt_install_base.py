@@ -3,7 +3,6 @@
 
 import os
 import sys
-from os import path
 
 INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
 sys.path.append("{}/-task-".format(INIT_SCRIPT_BASE))

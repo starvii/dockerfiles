@@ -7,7 +7,13 @@ import sys
 from os import path
 
 
+if "INIT_SCRIPT_BASE" not in os.environ:
+    raise Exception("Cannot read environment variable: INIT_SCRIPT_BASE")
+
+
 class AbstractTask(object):
+    BASE = os.getenv("INIT_SCRIPT_BASE")
+    
     def __init__(self):
         raise Exception("Cannot create object from an abstract class")
 
