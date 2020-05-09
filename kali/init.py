@@ -13,7 +13,8 @@ TASK = __import__("task".format(INIT_SCRIPT_BASE))
 
 def main():
     lst = TASK.AbstractTask.import_sub_tasks("{}/kali/task".format(INIT_SCRIPT_BASE))
-    print(lst)
+    for action in lst:
+        action.do()
 
 
 if __name__ == "__main__":
