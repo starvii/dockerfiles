@@ -14,8 +14,11 @@ class TaskAptSourcesList(SuperTask):
     def __init__(self):
         self.order = 1
         self.sources_list = """
-deb https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
-deb-src https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
+deb http://mirrors.aliyun.com/kali kali-rolling main non-free contrib
+deb-src http://mirrors.aliyun.com/kali kali-rolling main non-free contrib
+
+# deb https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
+# deb-src https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
 
 # deb https://mirrors.huaweicloud.com/kali kali-rolling main non-free contrib
 # deb-src https://mirrors.huaweicloud.com/kali kali-rolling main non-free contrib
@@ -34,7 +37,7 @@ apt upgrade -y --fix-missing
         try:
             if not path.exists("/etc/apt/sources.list.bak"):
                 SuperTask.run("cp /etc/apt/sources.list /etc/apt/sources.list.bak")
-            open("/etc/apt/sources.list", "wb").write(self.sources_list.encode())
+            open("/etc/apt/sources.list", "wb").write(self.sources_list.strip().encode())
             return SuperTask.run(self.script)
         except Exception as e:
             SuperTask.print_error(e)
