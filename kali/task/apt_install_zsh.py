@@ -29,18 +29,26 @@ su - admin -c "sh /tmp/omz.sh"
         p = Process(target=self.run, args=(self.script,))
         p.daemon = True
         p.start()
+        pid = p.pid
         wait_proc = 1
+        time.sleep(5)
         while wait_proc:
-            time.sleep(10)
-            os.system("ps -ef | grep admin | grep zsh | awk '{print $8}'>/tmp/detect_omz.log")
+            time.sleep(1)
+            os.system("ps -ef | grep -v grep | grep admin | grep zsh | awk '{print $2,$8}'>/tmp/detect_omz.log")
             if path.isfile("/tmp/detect_omz.log"):
                 lines = open("/tmp/detect_omz.log", "rb").readlines()
+                print(lines)
                 for line in lines:
-                    if line.strip().startswith(b"zsh "):
+                    ln = line.strip()
+                    a = ln.split(b" ")
+                    print(ln)
+                    if a[1] == b"zsh":
+                        print(a)
+                        pid = int(a[0])
                         time.sleep(5)
                         wait_proc = 0
                         break
-        os.kill(p.pid, 9)
+        os.kill(pid, 9)
         return 0
 
     def get_install_script(self):
