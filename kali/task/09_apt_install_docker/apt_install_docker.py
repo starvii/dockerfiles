@@ -10,7 +10,7 @@ from os import path
 class DO(object):
     order = 9
     current_path = path.dirname(path.abspath(__file__))
-    daemon_json = path.join(current_path, "daemon_json")
+    daemon_json = path.join(current_path, "daemon.json")
     script = """
 ################################################################################
 # step 1: 安装必要的一些系统工具
@@ -19,7 +19,7 @@ apt -y install apt-transport-https ca-certificates curl software-properties-comm
 # step 2: 安装GPG证书
 curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo apt-key add -
 # Step 3: 写入软件源信息
-sudo add-apt-repository "deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu focal stable"
+sudo add-apt-repository "deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu eoan stable"
 # Step 4: 更新并安装Docker-CE
 apt -y update
 apt -y install docker-ce
