@@ -7,11 +7,18 @@ import sys
 from os import path
 
 
-class DO(object):
+class _Do(object):
     order = 9
-    current_path = path.dirname(path.abspath(__file__))
-    daemon_json = path.join(current_path, "daemon.json")
-    script = """
+
+    @staticmethod
+    def run(script, _=True): print(script)
+    print_notice = print
+    print_error = print
+
+    def __init__(self):
+        self.current_path = path.dirname(path.abspath(__file__))
+        self.daemon_json = path.join(self.current_path, "daemon.json")
+        self.script = """
 ################################################################################
 # step 1: base software
 apt -y update
@@ -30,48 +37,33 @@ systemctl enable docker
 systemctl start docker
 cp {daemon_json} /etc/docker/daemon.json
 ################################################################################
-    """.format(daemon_json=daemon_json)
+        """.format(daemon_json=self.daemon_json)
 
-    run = None
-    print_notice = None
-    print_error = None
-
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def do(_):
+    def do(self):
         if not path.exists("/etc/docker"):
             os.makedirs("/etc/docker", 0o755)
-        DO.run(DO.script)
+        _Do.run(self.script, False)
 
 
 if "INIT_SCRIPT_BASE" in os.environ:
     INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
     sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
     SuperTask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
-    DO.run = SuperTask.run
-    DO.print_notice = SuperTask.print_notice
-    DO.print_error = SuperTask.print_error
+    def init_func(self): self._action = _Do()
+    _Do.run = SuperTask.run
+    _Do.print_notice = SuperTask.print_notice
+    _Do.print_error = SuperTask.print_error
 
     # 动态创建类
-    TaskAptInstallDocker = type("TaskAptInstallDocker", (SuperTask,), dict(
-        order=DO.order,
-        do=DO.do,
-    ))
-else:
-    DO.run = print
-    DO.print_notice = print
-    DO.print_error = print
-    TaskAptInstallDocker = type("TaskAptInstallDocker", (object,), dict(
-        order=DO.order,
-        do=DO.do,
+    _ = type("TaskAptInstallDocker", (SuperTask,), dict(
+        order=_Do.order,
+        __init__=init_func
     ))
 
 
 def main():
-    task = TaskAptInstallDocker()
-    task.do()
+    action = _Do()
+    action.do()
 
 
 if __name__ == "__main__":

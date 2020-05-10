@@ -6,49 +6,62 @@ import os
 import sys
 
 
-class DO(object):
+class _Do(object):
     order = 7
-    script_create_admin = """
+
+    @staticmethod
+    def run(script, _=True): print(script)
+    print_notice = print
+    print_error = print
+
+    def __init__(self):
+        self.script_create_admin = """
 ################################################################################
 useradd -m -s /bin/zsh -G sudo admin
 ################################################################################
-    """
-    script_move_admin = """
+        """.strip()
+        self.script_move_admin = """
 ################################################################################
 mv /home/{temp_user} /home/admin
 ################################################################################
-    """
-    script_modify_password = """
+        """.strip()
+        self.script_modify_password = """
 ################################################################################
 echo admin:123 | chpasswd
 ################################################################################
-    """
-    script_create_work_dir = """
+        """.strip()
+        self.script_create_work_dir = """
 ################################################################################
 mkdir /home/app /home/src /home/ctf /home/ml /home/docker
 chown admin:admin /home/app /home/src /home/ctf /home/ml /home/docker
 ################################################################################
-    """
+        """.strip()
 
-    run = None
-    print_notice = None
-    print_error = None
 
-    def __init__(self):
-        pass
+        self.script = """
+################################################################################
+apt install -y mariadb-server php php-mysql apache2
+systemctl stop nginx
+systemctl disable nginx
+systemctl stop apache2
+systemctl disable apache2
+systemctl stop mysql
+systemctl disable mysql
+# TODO: change mariadb password
+################################################################################
+        """.strip()
 
-    @staticmethod
-    def do(_):
+    def do(self):
         script = ""
-        temp_user = DO.user1000()
+        temp_user = _Do.user1000()
         if temp_user is None:
-            script += DO.script_create_admin
+            script += self.script_create_admin
         elif temp_user != "admin":
-            DO.replace(temp_user)
-            script += DO.script_move_admin.format(temp_user=temp_user)
-        script += DO.script_modify_password
-        script += DO.script_create_work_dir
-        DO.run(script)
+            _Do.replace(temp_user)
+            script += self.script_move_admin.format(temp_user=temp_user)
+        script += self.script_modify_password
+        script += self.script_create_work_dir
+        _Do.run(script)
 
     @staticmethod
     def user1000():
@@ -102,28 +115,21 @@ if "INIT_SCRIPT_BASE" in os.environ:
     INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
     sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
     SuperTask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
-    DO.run = SuperTask.run
-    DO.print_notice = SuperTask.print_notice
-    DO.print_error = SuperTask.print_error
+    def init_func(self): self._action = _Do()
+    _Do.run = SuperTask.run
+    _Do.print_notice = SuperTask.print_notice
+    _Do.print_error = SuperTask.print_error
 
     # 动态创建类
-    TaskUserAdmin = type("TaskUserAdmin", (SuperTask,), dict(
-        order=DO.order,
-        do=DO.do,
-    ))
-else:
-    DO.run = print
-    DO.print_notice = print
-    DO.print_error = print
-    TaskUserAdmin = type("TaskUserAdmin", (object,), dict(
-        order=DO.order,
-        do=DO.do,
+    _ = type("TaskUserAdmin", (SuperTask,), dict(
+        order=_Do.order,
+        __init__=init_func
     ))
 
 
 def main():
-    task = TaskUserAdmin()
-    task.do()
+    action = _Do()
+    action.do()
 
 
 if __name__ == "__main__":

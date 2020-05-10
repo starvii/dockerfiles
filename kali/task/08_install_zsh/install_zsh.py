@@ -9,52 +9,51 @@ from multiprocessing import Process
 import time
 
 
-class DO(object):
+class _Do(object):
     order = 8
-    current_path = path.dirname(path.abspath(__file__))
-    install_sh = path.join(current_path, "install.sh")
-    script_copy = """
-################################################################################
-cp {install_sh} /tmp/omz.sh
-################################################################################
-    """.format(install_sh=install_sh)
-    script_download = """
-################################################################################
-wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O /tmp/omz.sh
-################################################################################
-    """
-    script_install = """
-################################################################################
-su - admin -c "sh /tmp/omz.sh"
-################################################################################
-    """
 
-    run = None
-    print_notice = None
-    print_error = None
+    @staticmethod
+    def run(script, _=True): print(script)
+    print_notice = print
+    print_error = print
     install_mode = False
 
     def __init__(self):
-        pass
+        self.current_path = path.dirname(path.abspath(__file__))
+        self.install_sh = path.join(self.current_path, "install.sh")
+        self.script_copy = """
+################################################################################
+cp {install_sh} /tmp/omz.sh
+################################################################################
+        """.format(install_sh=self.install_sh).strip()
+        self.script_download = """
+################################################################################
+wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O /tmp/omz.sh
+################################################################################
+        """.strip()
+        self.script_install = """
+################################################################################
+su - admin -c "sh /tmp/omz.sh"
+################################################################################
+        """.strip()
 
-    @staticmethod
-    def do(_):
+    def do(self):
         script = ""
-        if path.exists(DO.install_sh) and path.isfile(DO.install_sh):
-            script += DO.script_copy
+        if path.exists(self.install_sh) and path.isfile(self.install_sh):
+            script += self.script_copy
         else:
-            script += DO.script_download
-        script += DO.script_install
-        if DO.install_mode:
-            DO.install(script)
+            script += self.script_download
+        script += self.script_install
+        if _Do.install_mode:
+            _Do.proc_install(script)
         else:
-            DO.run(script)
+            print(script)
 
     @staticmethod
-    def install(script):
+    def proc_install(script):
         # 由于oh-my-zsh安装完成后会停在shell处，无法自动退出
         # 启动一个新进程安装，本进行进行监控，一旦有shell出现，则kill shell
-        p = Process(target=DO.run, args=(script, False))
+        p = Process(target=_Do.run, args=(script, False))
         p.daemon = True
         p.start()
         pid = p.pid
@@ -80,29 +79,22 @@ if "INIT_SCRIPT_BASE" in os.environ:
     INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
     sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
     SuperTask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
-    DO.run = SuperTask.run
-    DO.print_notice = SuperTask.print_notice
-    DO.print_error = SuperTask.print_error
-    DO.install_mode = True
+    def init_func(self): self._action = _Do()
+    _Do.run = SuperTask.run
+    _Do.print_notice = SuperTask.print_notice
+    _Do.print_error = SuperTask.print_error
+    _Do.install_mode = True
+
     # 动态创建类
-    TaskInstallZsh = type("TaskInstallZsh", (SuperTask,), dict(
-        order=DO.order,
-        do=DO.do,
-    ))
-else:
-    DO.run = print
-    DO.print_notice = print
-    DO.print_error = print
-    DO.install_mode = False
-    TaskInstallZsh = type("TaskInstallZsh", (object,), dict(
-        order=DO.order,
-        do=DO.do,
+    _ = type("TaskInstallZsh", (SuperTask,), dict(
+        order=_Do.order,
+        __init__=init_func
     ))
 
 
 def main():
-    task = TaskInstallZsh()
-    task.do()
+    action = _Do()
+    action.do()
 
 
 if __name__ == "__main__":
