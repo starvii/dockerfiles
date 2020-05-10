@@ -4,11 +4,16 @@
 from __future__ import print_function
 import os
 import sys
-
+from os import path
 
 class DO(object):
     order = 6
+    current_path = path.dirname(path.abspath(__file__))
+    pip_conf = path.join(current_path, "pip.conf")
     script = """
+################################################################################
+mkdir -p /root/.pip
+cp {pip_conf} /root/.pip/pip.conf
 ################################################################################
 apt install -y python python-pip
 apt install -y python3 python3-pip
@@ -35,7 +40,7 @@ python3 -m pip install -U lxml
 python3 -m pip install -U beautifulsoup4
 python3 -m pip install -U tornado
 ################################################################################
-    """
+    """.format(pip_conf=pip_conf)
 
     run = None
     print_notice = None
