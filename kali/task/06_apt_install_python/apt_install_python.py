@@ -1,34 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import os
 import sys
-from os import path
-
-INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
-sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
-SuperTask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
 
 
-class TaskAptInstallBase(SuperTask):
-    def __init__(self):
-        self.order = 6
-        self.pip_conf = """
-[global]
-index-url = https://mirrors.huaweicloud.com/repository/pypi/simple
-trusted-host = mirrors.huaweicloud.com
-timeout = 120
-        """
-        self.script = """
+class DO(object):
+    order = 6
+    script = """
 ################################################################################
-apt install -y python python3 python3-pip
-# because there is no python-pip in apt now
-### wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py
-### python2 /tmp/get-pip.py
-# python2 /tmp/get-pip.py
-################################################################################
-        """
-        self.script_lib = """
+apt install -y python python-pip
+apt install -y python3 python3-pip
 ################################################################################
 apt install -y libpython2-dev libpython3-all-dev libssl-dev libmpfr-dev libmpc-dev
 python2 -m pip install -U pip setuptools
@@ -52,36 +35,47 @@ python3 -m pip install -U lxml
 python3 -m pip install -U beautifulsoup4
 python3 -m pip install -U tornado
 ################################################################################
-        """
+    """
 
-    def do(self):
-        try:
-            if not path.isdir("/root/.pip"):
-                os.makedirs("/root/.pip", 0o755)
-            open("/root/.pip/pip.conf", "wb").write(self.pip_conf.strip().encode())
-        except Exception as e:
-            self.print_error(e)
-        ret = self.run(self.script)
-        if ret == 0:
-            return ret
-        ret = self.check_python_pip()
-        if ret == 0:
-            return ret
-        ret = self.check_get_pip()
-        if ret == 0:
-            return ret
-        cmd = "python2 /tmp/get-pip.py\nrm -rf /tmp/get-pip.py\n"
-        ret = self.run(cmd)
-        if ret == 0:
-            return ret
-        return self.run(self.script_lib)
+    run = None
+    print_notice = None
+    print_error = None
 
-    def check_python_pip(self):
-        return self.run("apt install python-pip")
+    def __init__(self):
+        pass
 
-    def check_get_pip(self):
-        if path.exists("{BASE}/_external_/get-pip.tgz".format(BASE=INIT_SCRIPT_BASE)):
-            _c = "tar zxf {BASE}/_external_/get-pip.tgz -C /tmp".format(BASE=INIT_SCRIPT_BASE)
-        else:
-            _c = "wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py"
-        return self.run(_c)
+    @staticmethod
+    def do(_):
+        DO.run(DO.script)
+
+
+if "INIT_SCRIPT_BASE" in os.environ:
+    INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
+    sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
+    SuperTask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
+    DO.run = SuperTask.run
+    DO.print_notice = SuperTask.print_notice
+    DO.print_error = SuperTask.print_error
+
+    # 动态创建类
+    TaskAptInstallPython = type("TaskAptInstallPython", (SuperTask,), dict(
+        order=DO.order,
+        do=DO.do,
+    ))
+else:
+    DO.run = print
+    DO.print_notice = print
+    DO.print_error = print
+    TaskAptInstallPython = type("TaskAptInstallPython", (object,), dict(
+        order=DO.order,
+        do=DO.do,
+    ))
+
+
+def main():
+    task = TaskAptInstallPython()
+    task.do()
+
+
+if __name__ == "__main__":
+    main()

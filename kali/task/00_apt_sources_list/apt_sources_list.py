@@ -30,6 +30,7 @@ apt upgrade -y --fix-missing
     @staticmethod
     def do(_):
         try:
+            assert path.exists(DO.sources_list) and path.isfile(DO.sources_list)
             if not path.exists("/etc/apt/sources.list.bak"):
                 print("/etc/apt/sources.list.bak not exists. to backup ...")
                 shutil.copy2("/etc/apt/sources.list", "/etc/apt/sources.list.bak")
