@@ -25,13 +25,13 @@ apt install -y python3 python3-pip
 ################################################################################
 apt install -y libpython2-dev libpython3-all-dev libssl-dev libmpfr-dev libmpc-dev
 python2 -m pip install -U pip setuptools -i {url}
-python2 -m pip uninstall crypto pycrypto -i {url}
+python2 -m pip uninstall crypto pycrypto
 python2 -m pip install -U pycryptodome -i {url}
 python2 -m pip install -U gmpy -i {url}
 python2 -m pip install -U gmpy2 -i {url}
 python2 -m pip install -U pwntools -i {url}
 python3 -m pip install -U pip setuptools -i {url}
-python3 -m pip uninstall crypto pycrypto -i {url}
+python3 -m pip uninstall crypto pycrypto
 python3 -m pip install -U pycryptodome -i {url}
 python3 -m pip install -U gmpy -i {url}
 python3 -m pip install -U gmpy2 -i {url}
