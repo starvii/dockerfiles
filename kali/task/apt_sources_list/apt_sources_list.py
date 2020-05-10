@@ -61,7 +61,8 @@ else:
 
 
 def main():
-    TaskAptSourcesList.do()
+    task = TaskAptSourcesList()
+    task.do()
 
 
 if __name__ == "__main__":
