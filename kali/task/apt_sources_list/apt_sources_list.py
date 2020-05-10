@@ -28,7 +28,7 @@ apt upgrade -y --fix-missing
         pass
 
     @staticmethod
-    def do():
+    def do(_):
         try:
             if not path.exists("/etc/apt/sources.list.bak"):
                 shutil.copy2("/etc/apt/sources.list", "/etc/apt/sources.list.bak")
