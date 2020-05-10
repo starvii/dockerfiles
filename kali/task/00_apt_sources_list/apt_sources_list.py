@@ -9,7 +9,7 @@ import shutil
 
 
 class DO(object):
-    order = 1
+    order = 0
     current_path = path.dirname(path.abspath(__file__))
     sources_list = path.join(current_path, "sources.list")
     script = """
@@ -31,6 +31,7 @@ apt upgrade -y --fix-missing
     def do(_):
         try:
             if not path.exists("/etc/apt/sources.list.bak"):
+                print("/etc/apt/sources.list.bak not exists. to backup ...")
                 shutil.copy2("/etc/apt/sources.list", "/etc/apt/sources.list.bak")
             DO.run(DO.script)
         except Exception as e:

@@ -17,8 +17,9 @@ TASK = __import__("task".format(INIT_SCRIPT_BASE))
 
 def main():
     lst = TASK.AbstractTask.import_sub_tasks("{}/kali/task".format(INIT_SCRIPT_BASE))
-    for action in lst:
-        action.do()
+    for cls in lst:
+        obj = cls()
+        obj.do()
         input("pause ...")
 
 
