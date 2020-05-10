@@ -10,22 +10,20 @@ import shutil
 
 class _Do(object):
     order = 0
-    current_path = path.dirname(path.abspath(__file__))
-    sources_list = path.join(current_path, "sources.list")
-    script = """
-################################################################################
-cp {sources_list} /etc/apt/sources.list
-apt update
-apt upgrade -y --fix-missing
-################################################################################
-    """.format(sources_list=sources_list)
-
     run = print
     print_notice = print
     print_error = print
 
     def __init__(self):
-        pass
+        self.current_path = path.dirname(path.abspath(__file__))
+        self.sources_list = path.join(self.current_path, "sources.list")
+        self.script = """
+################################################################################
+cp {sources_list} /etc/apt/sources.list
+apt update
+apt upgrade -y --fix-missing
+################################################################################
+            """.format(sources_list=self.sources_list)
 
     def do(self):
         try:
@@ -33,19 +31,16 @@ apt upgrade -y --fix-missing
             if not path.exists("/etc/apt/sources.list.bak"):
                 print("/etc/apt/sources.list.bak not exists. to backup ...")
                 shutil.copy2("/etc/apt/sources.list", "/etc/apt/sources.list.bak")
-            self.run(self.script)
+            _Do.run(self.script)
         except Exception as e:
-            self.print_error(e)
-
-    @staticmethod
-    def init(self):
-        self._action = _Do()
+            _Do.print_error(e)
 
 
 if "INIT_SCRIPT_BASE" in os.environ:
     INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
     sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
     SuperTask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
+    def init_func(self): self._action = _Do()
     _Do.run = SuperTask.run
     _Do.print_notice = SuperTask.print_notice
     _Do.print_error = SuperTask.print_error
@@ -53,7 +48,7 @@ if "INIT_SCRIPT_BASE" in os.environ:
     # 动态创建类
     TaskAptSourcesList = type("TaskAptSourcesList", (SuperTask,), dict(
         order=_Do.order,
-        __init__=_Do.init,
+        __init__= init_func
     ))
 
 
