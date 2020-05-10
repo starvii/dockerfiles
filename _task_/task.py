@@ -16,10 +16,10 @@ class AbstractTask(object):
     
     def __init__(self):
         # raise Exception("Cannot create object from an abstract class")
-        pass
+        self._action = None
 
     def do(self):
-        pass
+        self._action.do()
 
     @staticmethod
     def import_sub_tasks(task_path):
