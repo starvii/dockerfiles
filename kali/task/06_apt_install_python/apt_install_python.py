@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# 最近有段时间python-pip无法安装。2020-05-10暂时没有这种情况了
+# 使用 wget https://bootstrap.pypa.io/get-pip.py
+# python2 get-pip.py 安装pip
+# huawei pypi源有问题，很多库没有。aliyun 暂时没发现不能安装的库
+
 from __future__ import print_function
 import os
 import sys
 from os import path
-import shutil
+
 
 class DO(object):
     order = 6

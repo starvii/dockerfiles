@@ -1,52 +1,48 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import os
 import sys
 
-INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
-sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
-SuperTask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
 
-
-class TaskAptInstallBase(SuperTask):
-    def __init__(self):
-        self.order = 7
-        self.script_create_admin = """
+class DO(object):
+    order = 7
+    script_create_admin = """
 ################################################################################
-echo "create user admin"
 useradd -m -s /bin/zsh -G sudo admin
 ################################################################################
-        """
-        self.script_modify_password = """
+    """
+    script_modify_password = """
 ################################################################################
 echo admin:123 | chpasswd
 ################################################################################
-        """
-        self.script_create_work_dir = """
+    """
+    script_create_work_dir = """
 ################################################################################
 mkdir /home/app /home/src /home/ctf /home/ml /home/docker
 chown admin:admin /home/app /home/src /home/ctf /home/ml /home/docker
 ################################################################################
-        """
+    """
 
-    def do(self):
-        temp_user = self.user1000()
+    run = None
+    print_notice = None
+    print_error = None
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def do(_):
+        script = ""
+        temp_user = DO.user1000()
         if temp_user is None:
-            ret = self.run(self.script_create_admin)
-            if ret != 0:
-                return ret
+            script += DO.script_create_admin
         elif temp_user != "admin":
-            ret = self.replace(temp_user)
-            if ret != 0:
-                return ret
-            ret = self.run("mv /home/{} /home/admin".format(temp_user))
-            if ret != 0:
-                return ret
-        ret = self.run(self.script_modify_password)
-        if ret != 0:
-            return ret
-        return SuperTask.run(self.script_create_work_dir)
+            DO.replace(temp_user)
+        script += DO.script_modify_password
+        script += DO.script_create_work_dir
+        DO.run(script)
 
     @staticmethod
     def user1000():
@@ -94,3 +90,35 @@ chown admin:admin /home/app /home/src /home/ctf /home/ml /home/docker
             SuperTask.print_error(e)
             return -1
         return 0
+
+
+if "INIT_SCRIPT_BASE" in os.environ:
+    INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
+    sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
+    SuperTask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
+    DO.run = SuperTask.run
+    DO.print_notice = SuperTask.print_notice
+    DO.print_error = SuperTask.print_error
+
+    # 动态创建类
+    TaskUserAdmin = type("TaskUserAdmin", (SuperTask,), dict(
+        order=DO.order,
+        do=DO.do,
+    ))
+else:
+    DO.run = print
+    DO.print_notice = print
+    DO.print_error = print
+    TaskUserAdmin = type("TaskUserAdmin", (object,), dict(
+        order=DO.order,
+        do=DO.do,
+    ))
+
+
+def main():
+    task = TaskUserAdmin()
+    task.do()
+
+
+if __name__ == "__main__":
+    main()
