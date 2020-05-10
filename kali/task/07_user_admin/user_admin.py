@@ -13,6 +13,11 @@ class DO(object):
 useradd -m -s /bin/zsh -G sudo admin
 ################################################################################
     """
+    script_move_admin = """
+################################################################################
+mv /home/{temp_user} /home/admin
+################################################################################
+    """
     script_modify_password = """
 ################################################################################
 echo admin:123 | chpasswd
@@ -40,6 +45,7 @@ chown admin:admin /home/app /home/src /home/ctf /home/ml /home/docker
             script += DO.script_create_admin
         elif temp_user != "admin":
             DO.replace(temp_user)
+            script += DO.script_move_admin.format(temp_user=temp_user)
         script += DO.script_modify_password
         script += DO.script_create_work_dir
         DO.run(script)

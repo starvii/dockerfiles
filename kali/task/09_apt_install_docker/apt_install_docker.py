@@ -8,7 +8,7 @@ from os import path
 
 
 class DO(object):
-    order = 8
+    order = 9
     current_path = path.dirname(path.abspath(__file__))
     daemon_json = path.join(current_path, "daemon_json")
     script = """
