@@ -6,9 +6,16 @@ import os
 import sys
 
 
-class DO(object):
+class _Do(object):
     order = 1
-    script = """
+
+    @staticmethod
+    def run(script, _=True): print(script)
+    print_notice = print
+    print_error = print
+
+    def __init__(self):
+        self.script = """
 ################################################################################
 apt install -y net-tools open-vm-tools openssh-server
 apt install -y zsh vim git wget curl pkg-config aria2
@@ -17,46 +24,31 @@ systemctl enable ssh
 systemctl restart ssh
 systemctl set-default multi-user.target
 ################################################################################
-    """
+        """.strip()
 
-    run = None
-    print_notice = None
-    print_error = None
-
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def do(_):
-        DO.run(DO.script)
+    def do(self):
+        _Do.run(self.script)
 
 
 if "INIT_SCRIPT_BASE" in os.environ:
     INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
     sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
     SuperTask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
-    DO.run = SuperTask.run
-    DO.print_notice = SuperTask.print_notice
-    DO.print_error = SuperTask.print_error
+    def init_func(self): self._action = _Do()
+    _Do.run = SuperTask.run
+    _Do.print_notice = SuperTask.print_notice
+    _Do.print_error = SuperTask.print_error
 
     # 动态创建类
-    TaskAptInstallBase = type("TaskAptInstallBase", (SuperTask,), dict(
-        order=DO.order,
-        do=DO.do,
-    ))
-else:
-    DO.run = print
-    DO.print_notice = print
-    DO.print_error = print
-    TaskAptInstallBase = type("TaskAptInstallBase", (object,), dict(
-        order=DO.order,
-        do=DO.do,
+    _ = type("TaskAptInstallBase", (SuperTask,), dict(
+        order=_Do.order,
+        __init__=init_func
     ))
 
 
 def main():
-    task = TaskAptInstallBase()
-    task.do()
+    action = _Do()
+    action.do()
 
 
 if __name__ == "__main__":

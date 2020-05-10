@@ -25,7 +25,7 @@ cp {sources_list} /etc/apt/sources.list
 apt update
 apt upgrade -y --fix-missing
 ################################################################################
-            """.format(sources_list=self.sources_list)
+            """.format(sources_list=self.sources_list).strip()
 
     def do(self):
         try:
@@ -48,7 +48,7 @@ if "INIT_SCRIPT_BASE" in os.environ:
     _Do.print_error = SuperTask.print_error
 
     # 动态创建类
-    TaskAptSourcesList = type("TaskAptSourcesList", (SuperTask,), dict(
+    _ = type("TaskAptSourcesList", (SuperTask,), dict(
         order=_Do.order,
         __init__=init_func
     ))
