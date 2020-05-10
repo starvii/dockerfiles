@@ -1,0 +1,11 @@
+deb http://mirrors.aliyun.com/kali kali-rolling main non-free contrib
+deb-src http://mirrors.aliyun.com/kali kali-rolling main non-free contrib
+
+# deb https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
+# deb-src https://mirrors.aliyun.com/kali kali-rolling main non-free contrib
+
+# deb https://mirrors.huaweicloud.com/kali kali-rolling main non-free contrib
+# deb-src https://mirrors.huaweicloud.com/kali kali-rolling main non-free contrib
+
+# deb https://mirrors.ustc.edu.cn/kali kali-rolling main non-free contrib
+# deb-src https://mirrors.ustc.edu.cn/kali kali-rolling main non-free contrib

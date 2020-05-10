@@ -32,8 +32,8 @@ class AbstractTask(object):
                 if a[1].lower() != ".py":
                     continue
                 __import__(a[0])
-        objs = [c() for c in AbstractTask.__subclasses__()]
-        return sorted(objs, key=lambda x: x.order, reverse=False)
+        classes = [c for c in AbstractTask.__subclasses__()]
+        return sorted(classes, key=lambda x: x.order, reverse=False)
 
     @staticmethod
     def run(script, stop_if_error=True):
