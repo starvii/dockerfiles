@@ -15,7 +15,8 @@ class AbstractTask(object):
     BASE = os.getenv("INIT_SCRIPT_BASE")
     
     def __init__(self):
-        raise Exception("Cannot create object from an abstract class")
+        # raise Exception("Cannot create object from an abstract class")
+        pass
 
     def do(self):
         pass
