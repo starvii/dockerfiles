@@ -10,7 +10,9 @@ import shutil
 
 class _Do(object):
     order = 0
-    run = print
+
+    @staticmethod
+    def run(script, _=True): print(script)
     print_notice = print
     print_error = print
 
@@ -48,7 +50,7 @@ if "INIT_SCRIPT_BASE" in os.environ:
     # 动态创建类
     TaskAptSourcesList = type("TaskAptSourcesList", (SuperTask,), dict(
         order=_Do.order,
-        __init__= init_func
+        __init__=init_func
     ))
 
 
