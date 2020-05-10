@@ -13,18 +13,18 @@ class DO(object):
     daemon_json = path.join(current_path, "daemon.json")
     script = """
 ################################################################################
-# step 1: 安装必要的一些系统工具
+# step 1: base software
 apt -y update
 apt -y install apt-transport-https ca-certificates curl software-properties-common
-# step 2: 安装GPG证书
+# step 2: install gpg
 curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo apt-key add -
-# Step 3: 写入软件源信息
+# Step 3: apt sources
 sudo add-apt-repository "deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu eoan stable"
-# Step 4: 更新并安装Docker-CE
+# Step 4: install 
 apt -y update
 apt -y install docker-ce
-# Step 5: 配置
-groupadd docker
+# Step 5: config
+# groupadd docker
 usermod -aG docker admin
 systemctl enable docker
 systemctl start docker
