@@ -47,10 +47,11 @@ if "INIT_SCRIPT_BASE" in os.environ:
     sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
     mod = __import__("task".format(INIT_SCRIPT_BASE))
     SuperTask = mod.AbstractTask
-    def init_func(self): self._action = _Do()
     _Do.run = mod.run
     _Do.print_notice = mod.print_notice
     _Do.print_error = mod.print_error
+    def init_func(self): self._action = _Do()
+
 
     # 动态创建类
     _ = type("TaskAptSourcesList", (SuperTask,), dict(
