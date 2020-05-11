@@ -54,7 +54,7 @@ python3 -m pip install -U tornado -i {url}
     """.format(url="https://mirrors.aliyun.com/pypi/simple", pip_conf=self.pip_conf)
 
     def do(self):
-        _Do.run(self.script)
+        _Do.run(self.script, False)
 
 
 if "INIT_SCRIPT_BASE" in os.environ:

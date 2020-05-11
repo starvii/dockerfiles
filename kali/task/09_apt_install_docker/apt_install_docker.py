@@ -31,13 +31,13 @@ sudo add-apt-repository "deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/l
 apt -y update
 apt -y install docker-ce
 # Step 5: config
-# groupadd docker
+groupadd docker
 usermod -aG docker admin
 systemctl enable docker
 systemctl start docker
 cp {daemon_json} /etc/docker/daemon.json
 ################################################################################
-        """.format(daemon_json=self.daemon_json)
+        """.strip().format(daemon_json=self.daemon_json)
 
     def do(self):
         if not path.exists("/etc/docker"):

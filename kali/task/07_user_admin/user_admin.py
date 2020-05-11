@@ -4,6 +4,7 @@
 from __future__ import print_function
 import os
 import sys
+from os import path
 
 
 class _Do(object):
@@ -17,14 +18,16 @@ class _Do(object):
     def __init__(self):
         self.script_create_admin = """
 ################################################################################
-useradd -m -s /bin/zsh -G sudo admin
+useradd -s /bin/zsh -G sudo admin
 ################################################################################
         """.strip()
-        self.script_move_admin = """
+        self.script_create_home = """
 ################################################################################
-mv /home/{temp_user} /home/admin
+mkdir -p /home/admin
+chmod 700 /home/admin
+chown admin:admin /home/admin
 ################################################################################
-        """.strip()
+        """
         self.script_modify_password = """
 ################################################################################
 echo admin:123 | chpasswd
@@ -36,8 +39,6 @@ mkdir /home/app /home/src /home/ctf /home/ml /home/docker
 chown admin:admin /home/app /home/src /home/ctf /home/ml /home/docker
 ################################################################################
         """.strip()
-
-
         self.script = """
 ################################################################################
 apt install -y mariadb-server php php-mysql apache2
@@ -52,15 +53,17 @@ systemctl disable mysql
         """.strip()
 
     def do(self):
-        script = ""
+        scripts = []
         temp_user = _Do.user1000()
         if temp_user is None:
-            script += self.script_create_admin
+            scripts.append(self.script_create_admin)
         elif temp_user != "admin":
             _Do.replace(temp_user)
-            script += self.script_move_admin.format(temp_user=temp_user)
-        script += self.script_modify_password
-        script += self.script_create_work_dir
+        if not path.exists("/home/admin"):
+            scripts.append(self.script_create_home)
+        scripts.append(self.script_modify_password)
+        scripts.append(self.script_create_work_dir)
+        script = "\n\n".join(scripts)
         _Do.run(script)
 
     @staticmethod
