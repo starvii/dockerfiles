@@ -12,8 +12,12 @@ class _Do(object):
 
     @staticmethod
     def run(script, _=True): print(script)
-    print_notice = print
-    print_error = print
+
+    @staticmethod
+    def print_notice(out): print(out)
+
+    @staticmethod
+    def print_error(out): print(out)
 
     def __init__(self):
         self.script_create_admin = """
