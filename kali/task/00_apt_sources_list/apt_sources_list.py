@@ -8,28 +8,20 @@ from os import path
 import shutil
 
 
-class _Do(object):
+class _Actor(object):
     order = 0
-
-    @staticmethod
-    def run(script, _=True): print(script)
-
-    @staticmethod
-    def print_notice(out): print(out)
-
-    @staticmethod
-    def print_error(out): print(out)
-
-    def __init__(self):
-        self.current_path = path.dirname(path.abspath(__file__))
-        self.sources_list = path.join(self.current_path, "sources.list")
-        self.script = """
+    current_path = path.dirname(path.abspath(__file__))
+    sources_list = path.join(current_path, "sources.list")
+    script = """
 ################################################################################
 cp {sources_list} /etc/apt/sources.list
 apt update
 apt upgrade -y --fix-missing
 ################################################################################
-            """.format(sources_list=self.sources_list).strip()
+    """.format(sources_list=sources_list).strip()
+
+    def __init__(self, func=None):
+        self.func = func
 
     def do(self):
         try:
@@ -37,32 +29,60 @@ apt upgrade -y --fix-missing
             if not path.exists("/etc/apt/sources.list.bak"):
                 print("/etc/apt/sources.list.bak not exists. to backup ...")
                 shutil.copy2("/etc/apt/sources.list", "/etc/apt/sources.list.bak")
-            _Do.run(self.script)
+            self.func.run(_Actor.script)
         except Exception as e:
-            _Do.print_error(e)
+            self.func.print_error(e)
+
+
+class _FakeFunc(object):  # default actor
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def run(script, _=True):
+        print(script)
+
+    @staticmethod
+    def print_notice(out):
+        print(out)
+
+    @staticmethod
+    def print_error(out):
+        print(out)
 
 
 if "INIT_SCRIPT_BASE" in os.environ:
     INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
     sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
-    mod = __import__("task".format(INIT_SCRIPT_BASE))
-    SuperTask = mod.AbstractTask
-    _Do.run = mod.run
-    _Do.print_notice = mod.print_notice
-    _Do.print_error = mod.print_error
-    def init_func(self): self._action = _Do()
+    Task = __import__("task".format(INIT_SCRIPT_BASE)).AbstarctTask
+
+    class _RealFunc(object):  # delegate task actor
+        def __init__(self):
+            pass
+
+        @staticmethod
+        def run(script, stop=True):
+            Task.run(script, stop)
+
+        @staticmethod
+        def print_notice(out):
+            Task.print_notice(out)
+
+        @staticmethod
+        def print_error(out):
+            Task.print_error(out)
+
+    def init_func(self): self.actor = _Actor(_RealFunc)
 
 
     # 动态创建类
-    _ = type("TaskAptSourcesList", (SuperTask,), dict(
-        order=_Do.order,
+    _ = type("TaskAptSourcesList", (Task,), dict(
         __init__=init_func
     ))
 
 
 def main():
-    action = _Do()
-    action.do()
+    _Actor(_FakeFunc).do()
 
 
 if __name__ == "__main__":

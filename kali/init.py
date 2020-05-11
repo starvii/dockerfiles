@@ -20,7 +20,6 @@ def main():
     for cls in lst:
         obj = cls()
         obj.do()
-        input("pause ...")
 
 
 if __name__ == "__main__":

@@ -54,6 +54,7 @@ python3 -m pip install -U aiohttp -i {url}
 python3 -m pip install -U lxml -i {url}
 python3 -m pip install -U beautifulsoup4 -i {url}
 python3 -m pip install -U tornado -i {url}
+python3 -m pip install -U PIL -i {url}
 ################################################################################
     """.format(url="https://mirrors.aliyun.com/pypi/simple", pip_conf=self.pip_conf)
 
