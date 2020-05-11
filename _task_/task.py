@@ -67,7 +67,7 @@ class AbstractTask(object):
                     cmd = "\n".join(buf)
                     buf = []
                 AbstractTask.print_notice(cmd)
-                input("pause ...")
+                # input("pause ...")
                 ret = os.system(cmd)
                 ret = ret >> 8
                 if ret != 0:
