@@ -9,11 +9,14 @@
 from __future__ import print_function
 import os
 import sys
+from os import path
 
 
 class _Actor(object):
     name = "TaskAptInstallPython"
     order = 6
+    current_path = path.dirname(path.abspath(__file__))
+    pip_conf = path.join(current_path, "pip.conf")
     script = """
 ################################################################################
 cp {pip_conf} /root/.pip
@@ -42,7 +45,7 @@ python3 -m pip install -U beautifulsoup4 -i {url}
 python3 -m pip install -U tornado -i {url}
 python3 -m pip install -U PIL -i {url}
 ################################################################################
-    """.strip().format(url="https://mirrors.aliyun.com/pypi/simple")
+    """.strip().format(url="https://mirrors.aliyun.com/pypi/simple", pip_conf=pip_conf)
 
     def __init__(self, func=None):
         self.func = func
