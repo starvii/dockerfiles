@@ -42,7 +42,7 @@ python3 -m pip install -U beautifulsoup4 -i {url}
 python3 -m pip install -U tornado -i {url}
 python3 -m pip install -U PIL -i {url}
 ################################################################################
-    """.strip()
+    """.strip().format(url="https://mirrors.aliyun.com/pypi/simple")
 
     def __init__(self, func=None):
         self.func = func
