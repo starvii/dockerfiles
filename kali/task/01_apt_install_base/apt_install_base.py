@@ -4,33 +4,24 @@
 from __future__ import print_function
 import os
 import sys
-from os import path
-import shutil
 
 
 class _Actor(object):
-    name = "TaskAptSourcesList"
-    order = 0
-    current_path = path.dirname(path.abspath(__file__))
-    sources_list = path.join(current_path, "sources.list")
+    name = "TaskAptInstallBase"
+    order = 1
     script = """
 ################################################################################
-cp {sources_list} /etc/apt/sources.list
-apt update
-apt upgrade -y --fix-missing
+apt install -y net-tools open-vm-tools openssh-server
+apt install -y zsh vim git wget curl pkg-config aria2
+apt install -y apt-transport-https ca-certificates gnupg2 lsb-release software-properties-common
+systemctl enable ssh
+systemctl restart ssh
+systemctl set-default multi-user.target
 ################################################################################
-    """.format(sources_list=sources_list).strip()
+    """.strip()
 
     def do(self):
-        try:
-            assert path.exists(self.sources_list) and path.isfile(self.sources_list)
-            if not path.exists("/etc/apt/sources.list.bak"):
-                print("/etc/apt/sources.list.bak not exists. to backup ...")
-                shutil.copy2("/etc/apt/sources.list", "/etc/apt/sources.list.bak")
-            return self.func.run(_Actor.script)
-        except Exception as e:
-            self.func.print_error(e)
-            return -1
+        return self.func.run(_Actor.script)
 
     def __init__(self, func=None):
         self.func = func

@@ -4,46 +4,35 @@
 from __future__ import print_function
 import os
 import sys
-from os import path
 
 
-class _Do(object):
+class _Actor(object):
+    name = "TaskUserAdmin"
     order = 7
-
-    @staticmethod
-    def run(script, _=True): print(script)
-
-    @staticmethod
-    def print_notice(out): print(out)
-
-    @staticmethod
-    def print_error(out): print(out)
-
-    def __init__(self):
-        self.script_create_admin = """
+    script_create_admin = """
 ################################################################################
 useradd -s /bin/zsh -G sudo admin
 ################################################################################
-        """.strip()
-        self.script_create_home = """
+    """.strip()
+    script_create_home = """
 ################################################################################
 mkdir -p /home/admin
 chmod 700 /home/admin
 chown admin:admin /home/admin
 ################################################################################
-        """
-        self.script_modify_password = """
+    """.strip()
+    script_modify_password = """
 ################################################################################
 echo admin:123 | chpasswd
 ################################################################################
-        """.strip()
-        self.script_create_work_dir = """
+    """.strip()
+    script_create_work_dir = """
 ################################################################################
 mkdir /home/app /home/src /home/ctf /home/ml /home/docker
 chown admin:admin /home/app /home/src /home/ctf /home/ml /home/docker
 ################################################################################
-        """.strip()
-        self.script = """
+    """.strip()
+    script = """
 ################################################################################
 apt install -y mariadb-server php php-mysql apache2
 systemctl stop nginx
@@ -54,21 +43,21 @@ systemctl stop mysql
 systemctl disable mysql
 # TODO: change mariadb password
 ################################################################################
-        """.strip()
+    """.strip()
 
     def do(self):
         scripts = []
-        temp_user = _Do.user1000()
+        temp_user = _Actor.user1000()
         if temp_user is None:
-            scripts.append(self.script_create_admin)
+            scripts.append(_Actor.script_create_admin)
         elif temp_user != "admin":
-            _Do.replace(temp_user)
+            _Actor.replace(temp_user)
         if not path.exists("/home/admin"):
-            scripts.append(self.script_create_home)
-        scripts.append(self.script_modify_password)
-        scripts.append(self.script_create_work_dir)
+            scripts.append(_Actor.script_create_home)
+        scripts.append(_Actor.script_modify_password)
+        scripts.append(_Actor.script_create_work_dir)
         script = "\n\n".join(scripts)
-        _Do.run(script)
+        return self.func.run(script, False)
 
     @staticmethod
     def user1000():
@@ -117,29 +106,61 @@ systemctl disable mysql
             return -1
         return 0
 
+    def __init__(self, func=None):
+        self.func = func
+
 
 if "INIT_SCRIPT_BASE" in os.environ:
     INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
     sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
-    mod = __import__("task".format(INIT_SCRIPT_BASE))
-    SuperTask = mod.AbstractTask
-    _Do.run = mod.run
-    _Do.print_notice = mod.print_notice
-    _Do.print_error = mod.print_error
+    ATask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
 
 
-    def init_func(self): self._action = _Do()
+    class _RealFunc(object):  # delegate task actor
+        def __init__(self):
+            pass
+
+        @staticmethod
+        def run(script, stop=True):
+            ATask.run(script, stop)
+
+        @staticmethod
+        def print_notice(out):
+            ATask.print_notice(out)
+
+        @staticmethod
+        def print_error(out):
+            ATask.print_error(out)
+
+
+    def init_func(self): self.actor = _Actor(_RealFunc)
+
 
     # 动态创建类
-    _ = type("TaskUserAdmin", (SuperTask,), dict(
-        order=_Do.order,
-        __init__=init_func
+    _ = type(_Actor.name, (ATask,), dict(
+        __init__=init_func,
+        order=_Actor.order,
     ))
 
 
 def main():
-    action = _Do()
-    action.do()
+    class _FakeFunc(object):  # default actor
+        def __init__(self):
+            pass
+
+        @staticmethod
+        def run(script, _=True):
+            print(script)
+
+        @staticmethod
+        def print_notice(out):
+            print(out)
+
+        @staticmethod
+        def print_error(out):
+            print(out)
+
+    _Actor(_FakeFunc).do()
 
 
 if __name__ == "__main__":

@@ -4,36 +4,29 @@
 from __future__ import print_function
 import os
 import sys
-from os import path
-import shutil
 
 
 class _Actor(object):
-    name = "TaskAptSourcesList"
-    order = 0
-    current_path = path.dirname(path.abspath(__file__))
-    sources_list = path.join(current_path, "sources.list")
+    name = "TaskAptInstallPhp"
+    order = 5
     script = """
 ################################################################################
-cp {sources_list} /etc/apt/sources.list
-apt update
-apt upgrade -y --fix-missing
+apt install -y mariadb-server php php-mysql apache2
+systemctl stop nginx
+systemctl disable nginx
+systemctl stop apache2
+systemctl disable apache2
+systemctl stop mysql
+systemctl disable mysql
+# TODO: change mariadb password
 ################################################################################
-    """.format(sources_list=sources_list).strip()
-
-    def do(self):
-        try:
-            assert path.exists(self.sources_list) and path.isfile(self.sources_list)
-            if not path.exists("/etc/apt/sources.list.bak"):
-                print("/etc/apt/sources.list.bak not exists. to backup ...")
-                shutil.copy2("/etc/apt/sources.list", "/etc/apt/sources.list.bak")
-            return self.func.run(_Actor.script)
-        except Exception as e:
-            self.func.print_error(e)
-            return -1
+    """.strip()
 
     def __init__(self, func=None):
         self.func = func
+
+    def do(self):
+        return self.func.run(_Actor.script)
 
 
 if "INIT_SCRIPT_BASE" in os.environ:

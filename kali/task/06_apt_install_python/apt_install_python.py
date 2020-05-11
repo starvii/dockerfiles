@@ -6,29 +6,15 @@
 # python2 get-pip.py 安装pip
 # huawei pypi源有问题，很多库没有。aliyun 暂时没发现不能安装的库
 
-
 from __future__ import print_function
 import os
 import sys
-from os import path
 
 
-class _Do(object):
+class _Actor(object):
+    name = "TaskAptInstallPython"
     order = 6
-
-    @staticmethod
-    def run(script, _=True): print(script)
-
-    @staticmethod
-    def print_notice(out): print(out)
-
-    @staticmethod
-    def print_error(out): print(out)
-
-    def __init__(self):
-        self.current_path = path.dirname(path.abspath(__file__))
-        self.pip_conf = path.join(self.current_path, "pip.conf")
-        self.script = """
+    script = """
 ################################################################################
 cp {pip_conf} /root/.pip
 ################################################################################
@@ -56,34 +42,66 @@ python3 -m pip install -U beautifulsoup4 -i {url}
 python3 -m pip install -U tornado -i {url}
 python3 -m pip install -U PIL -i {url}
 ################################################################################
-    """.format(url="https://mirrors.aliyun.com/pypi/simple", pip_conf=self.pip_conf)
+    """.strip()
+
+    def __init__(self, func=None):
+        self.func = func
 
     def do(self):
-        _Do.run(self.script, False)
+        return self.func.run(_Actor.script, False)
 
 
 if "INIT_SCRIPT_BASE" in os.environ:
     INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
     sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
-    mod = __import__("task".format(INIT_SCRIPT_BASE))
-    SuperTask = mod.AbstractTask
-    _Do.run = mod.run
-    _Do.print_notice = mod.print_notice
-    _Do.print_error = mod.print_error
+    ATask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
 
 
-    def init_func(self): self._action = _Do()
+    class _RealFunc(object):  # delegate task actor
+        def __init__(self):
+            pass
+
+        @staticmethod
+        def run(script, stop=True):
+            ATask.run(script, stop)
+
+        @staticmethod
+        def print_notice(out):
+            ATask.print_notice(out)
+
+        @staticmethod
+        def print_error(out):
+            ATask.print_error(out)
+
+
+    def init_func(self): self.actor = _Actor(_RealFunc)
+
 
     # 动态创建类
-    _ = type("TaskAptInstallPython", (SuperTask,), dict(
-        order=_Do.order,
-        __init__=init_func
+    _ = type(_Actor.name, (ATask,), dict(
+        __init__=init_func,
+        order=_Actor.order,
     ))
 
 
 def main():
-    action = _Do()
-    action.do()
+    class _FakeFunc(object):  # default actor
+        def __init__(self):
+            pass
+
+        @staticmethod
+        def run(script, _=True):
+            print(script)
+
+        @staticmethod
+        def print_notice(out):
+            print(out)
+
+        @staticmethod
+        def print_error(out):
+            print(out)
+
+    _Actor(_FakeFunc).do()
 
 
 if __name__ == "__main__":

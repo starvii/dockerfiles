@@ -9,55 +9,46 @@ from multiprocessing import Process
 import time
 
 
-class _Do(object):
-    order = 8
-
-    @staticmethod
-    def run(script, _=True): print(script)
-
-    @staticmethod
-    def print_notice(out): print(out)
-
-    @staticmethod
-    def print_error(out): print(out)
-    install_mode = False
-
-    def __init__(self):
-        self.current_path = path.dirname(path.abspath(__file__))
-        self.install_sh = path.join(self.current_path, "install.sh")
-        self.script_copy = """
+class _Actor(object):
+    name = "TaskInstallZsh"
+    order = 5
+    install_mode = False  # 默认情况不安装。如果安装的时候，需要改为True
+    current_path = path.dirname(path.abspath(__file__))
+    install_sh = path.join(current_path, "install.sh")
+    script_copy = """
 ################################################################################
 cp {install_sh} /tmp/omz.sh
 ################################################################################
-        """.format(install_sh=self.install_sh).strip()
-        self.script_download = """
+    """.format(install_sh=install_sh).strip()
+    script_download = """
 ################################################################################
 wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O /tmp/omz.sh
 ################################################################################
-        """.strip()
-        self.script_install = """
+    """.strip()
+    script_install = """
 ################################################################################
 su - admin -c "sh /tmp/omz.sh"
 ################################################################################
-        """.strip()
+    """.strip()
 
     def do(self):
-        script = ""
-        if path.exists(self.install_sh) and path.isfile(self.install_sh):
-            script += self.script_copy
+        scripts = []
+        if path.exists(_Actor.install_sh) and path.isfile(_Actor.install_sh):
+            scripts.append(_Actor.script_copy)
         else:
-            script += self.script_download
-        script += self.script_install
-        if _Do.install_mode:
-            _Do.proc_install(script)
+            scripts.append(_Actor.script_download)
+        scripts.append(_Actor.script_install)
+        script = "\n".join(scripts)
+        if _Actor.install_mode:
+            return self.proc_install(script)
         else:
             print(script)
+            return 0
 
-    @staticmethod
-    def proc_install(script):
+    def proc_install(self, script):
         # 由于oh-my-zsh安装完成后会停在shell处，无法自动退出
         # 启动一个新进程安装，本进行进行监控，一旦有shell出现，则kill shell
-        p = Process(target=_Do.run, args=(script, False))
+        p = Process(target=self.func.run, args=(script, False))
         p.daemon = True
         p.start()
         pid = p.pid
@@ -77,31 +68,63 @@ su - admin -c "sh /tmp/omz.sh"
                         wait_proc = 0
                         break
         os.kill(pid, 9)
+        return 0
 
+    def __init__(self, func=None):
+        self.func = func
 
 if "INIT_SCRIPT_BASE" in os.environ:
+    _Actor.install_mode = True
     INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
     sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
-    mod = __import__("task".format(INIT_SCRIPT_BASE))
-    SuperTask = mod.AbstractTask
-    _Do.run = mod.run
-    _Do.print_notice = mod.print_notice
-    _Do.print_error = mod.print_error
+    ATask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
 
 
-    def init_func(self): self._action = _Do()
-    _Do.install_mode = True
+    class _RealFunc(object):  # delegate task actor
+        def __init__(self):
+            pass
+
+        @staticmethod
+        def run(script, stop=True):
+            ATask.run(script, stop)
+
+        @staticmethod
+        def print_notice(out):
+            ATask.print_notice(out)
+
+        @staticmethod
+        def print_error(out):
+            ATask.print_error(out)
+
+
+    def init_func(self): self.actor = _Actor(_RealFunc)
+
 
     # 动态创建类
-    _ = type("TaskInstallZsh", (SuperTask,), dict(
-        order=_Do.order,
-        __init__=init_func
+    _ = type(_Actor.name, (ATask,), dict(
+        __init__=init_func,
+        order=_Actor.order,
     ))
 
 
 def main():
-    action = _Do()
-    action.do()
+    class _FakeFunc(object):  # default actor
+        def __init__(self):
+            pass
+
+        @staticmethod
+        def run(script, _=True):
+            print(script)
+
+        @staticmethod
+        def print_notice(out):
+            print(out)
+
+        @staticmethod
+        def print_error(out):
+            print(out)
+
+    _Actor(_FakeFunc).do()
 
 
 if __name__ == "__main__":
