@@ -54,7 +54,7 @@ class _FakeFunc(object):  # default actor
 if "INIT_SCRIPT_BASE" in os.environ:
     INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
     sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
-    Task = __import__("task".format(INIT_SCRIPT_BASE)).AbstarctTask
+    ATask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
 
     class _RealFunc(object):  # delegate task actor
         def __init__(self):
@@ -62,22 +62,23 @@ if "INIT_SCRIPT_BASE" in os.environ:
 
         @staticmethod
         def run(script, stop=True):
-            Task.run(script, stop)
+            ATask.run(script, stop)
 
         @staticmethod
         def print_notice(out):
-            Task.print_notice(out)
+            ATask.print_notice(out)
 
         @staticmethod
         def print_error(out):
-            Task.print_error(out)
+            ATask.print_error(out)
 
     def init_func(self): self.actor = _Actor(_RealFunc)
 
 
     # 动态创建类
-    _ = type("TaskAptSourcesList", (Task,), dict(
-        __init__=init_func
+    _ = type("TaskAptSourcesList", (ATask,), dict(
+        __init__=init_func,
+        order=_Actor.order,
     ))
 
 

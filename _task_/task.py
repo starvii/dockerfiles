@@ -23,9 +23,6 @@ class AbstractTask(object):
     def do(self):
         return self.actor.do()
 
-    def order(self):
-        return self.actor.order
-
     @staticmethod
     def import_sub_tasks(task_path):
         if not path.isdir(task_path):
@@ -39,7 +36,7 @@ class AbstractTask(object):
                     continue
                 __import__(a[0])
         classes = [c for c in AbstractTask.__subclasses__()]
-        return sorted(classes, key=lambda x: x.order(), reverse=False)
+        return sorted(classes, key=lambda x: x.order, reverse=False)
 
     @staticmethod
     def print_notice(out):

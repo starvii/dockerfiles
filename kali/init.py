@@ -12,11 +12,11 @@ if sys.version_info < (3,):
 INIT_SCRIPT_BASE = path.dirname(path.dirname(path.abspath(__file__)))
 sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
 os.environ["INIT_SCRIPT_BASE"] = INIT_SCRIPT_BASE
-TASK = __import__("task".format(INIT_SCRIPT_BASE))
+ATask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
 
 
 def main():
-    lst = TASK.AbstractTask.import_sub_tasks("{}/kali/task".format(INIT_SCRIPT_BASE))
+    lst = ATask.import_sub_tasks("{}/kali/task".format(INIT_SCRIPT_BASE))
     for cls in lst:
         obj = cls()
         obj.do()
