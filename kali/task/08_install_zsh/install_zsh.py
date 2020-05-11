@@ -11,7 +11,7 @@ import time
 
 class _Actor(object):
     name = "TaskInstallZsh"
-    order = 5
+    order = 8
     install_mode = False  # 默认情况不安装。如果安装的时候，需要改为True
     current_path = path.dirname(path.abspath(__file__))
     install_sh = path.join(current_path, "install.sh")
