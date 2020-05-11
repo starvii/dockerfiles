@@ -45,11 +45,12 @@ apt upgrade -y --fix-missing
 if "INIT_SCRIPT_BASE" in os.environ:
     INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
     sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
-    SuperTask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
+    mod = __import__("task".format(INIT_SCRIPT_BASE))
+    SuperTask = mod.AbstractTask
     def init_func(self): self._action = _Do()
-    _Do.run = SuperTask.run
-    _Do.print_notice = SuperTask.print_notice
-    _Do.print_error = SuperTask.print_error
+    _Do.run = mod.run
+    _Do.print_notice = mod.print_notice
+    _Do.print_error = mod.print_error
 
     # 动态创建类
     _ = type("TaskAptSourcesList", (SuperTask,), dict(
