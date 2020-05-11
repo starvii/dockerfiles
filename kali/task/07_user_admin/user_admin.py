@@ -4,6 +4,7 @@
 from __future__ import print_function
 import os
 import sys
+from os import path
 
 
 class _Actor(object):
@@ -51,7 +52,7 @@ systemctl disable mysql
         if temp_user is None:
             scripts.append(_Actor.script_create_admin)
         elif temp_user != "admin":
-            _Actor.replace(temp_user)
+            self.replace(temp_user)
         if not path.exists("/home/admin"):
             scripts.append(_Actor.script_create_home)
         scripts.append(_Actor.script_modify_password)
@@ -69,8 +70,7 @@ systemctl disable mysql
         username = lines[0].split(b":")[0].decode()
         return username
 
-    @staticmethod
-    def replace(temp_user):
+    def replace(self, temp_user):
         try:
             tu = temp_user.strip().encode()
             prefix = "{}:x:1000:1000:".format(temp_user.strip()).encode()
@@ -102,7 +102,7 @@ systemctl disable mysql
                 buffer.append(gl + b"\n")
             open("/etc/group", "wb").writelines(buffer)
         except Exception as e:
-            SuperTask.print_error(e)
+            self.func.print_error(e)
             return -1
         return 0
 
