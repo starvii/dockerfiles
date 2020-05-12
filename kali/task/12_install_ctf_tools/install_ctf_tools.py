@@ -22,6 +22,10 @@ git clone https://github.com/zardus/ctf-tools.git /home/app/ctf-tools
 #rp++
 #seccomp-tools
 #yafu
+#peda
+#pwn_debug
+#LibcSearcher
+
 ################################################################################
     """.strip()
 
