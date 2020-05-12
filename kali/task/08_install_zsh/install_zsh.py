@@ -9,10 +9,9 @@ from multiprocessing import Process
 import time
 
 
-class _Actor(object):
+class Actor(object):
     name = "TaskInstallZsh"
     order = 8
-    install_mode = False  # 默认情况不安装。如果安装的时候，需要改为True
     current_path = path.dirname(path.abspath(__file__))
     install_sh = path.join(current_path, "install.sh")
     script_copy = """
@@ -33,13 +32,13 @@ su - admin -c "sh /tmp/omz.sh"
 
     def do(self):
         scripts = []
-        if path.exists(_Actor.install_sh) and path.isfile(_Actor.install_sh):
-            scripts.append(_Actor.script_copy)
+        if path.exists(Actor.install_sh) and path.isfile(Actor.install_sh):
+            scripts.append(Actor.script_copy)
         else:
-            scripts.append(_Actor.script_download)
-        scripts.append(_Actor.script_install)
+            scripts.append(Actor.script_download)
+        scripts.append(Actor.script_install)
         script = "\n".join(scripts)
-        if _Actor.install_mode:
+        if self.func.__name__ != "DebugFunc":
             return self.proc_install(script)
         else:
             print(script)
@@ -68,19 +67,26 @@ su - admin -c "sh /tmp/omz.sh"
                         wait_proc = 0
                         break
         os.kill(pid, 9)
+        rc = open("/home/admin/.zshrc", "rb").read()
+        try:
+            if b"unsetopt share_history" not in rc:
+                rc += "\nunsetopt share_history\nunsetopt inc_append_history\numask 022\n"
+                open("/home/admin/.zshrc", "wb").write(rc)
+        except Exception as e:
+            self.func.print_error(e)
         return 0
 
     def __init__(self, func=None):
         self.func = func
 
+
 if "INIT_SCRIPT_BASE" in os.environ:
-    _Actor.install_mode = True
     INIT_SCRIPT_BASE = os.getenv("INIT_SCRIPT_BASE")
     sys.path.append("{}/_task_".format(INIT_SCRIPT_BASE))
     ATask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
 
 
-    class _RealFunc(object):  # delegate task actor
+    class ProductFunc(object):  # delegate task actor
         def __init__(self):
             pass
 
@@ -97,18 +103,18 @@ if "INIT_SCRIPT_BASE" in os.environ:
             ATask.print_error(out)
 
 
-    def init_func(self): self.actor = _Actor(_RealFunc)
+    def init_func(self): self.actor = Actor(ProductFunc)
 
 
-    # 动态创建类
-    _ = type(_Actor.name, (ATask,), dict(
+    # 使用 type 动态创建类
+    _ = type(Actor.name, (ATask,), dict(
         __init__=init_func,
-        order=_Actor.order,
+        order=Actor.order,
     ))
 
 
 def main():
-    class _FakeFunc(object):  # default actor
+    class DebugFunc(object):  # default actor
         def __init__(self):
             pass
 
@@ -124,7 +130,7 @@ def main():
         def print_error(out):
             print(out)
 
-    _Actor(_FakeFunc).do()
+    Actor(DebugFunc).do()
 
 
 if __name__ == "__main__":
