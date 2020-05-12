@@ -6,7 +6,7 @@ import os
 import sys
 
 
-class _Actor(object):
+class Actor(object):
     name = "TaskAptInstallBase"
     order = 1
     script = """
@@ -21,7 +21,7 @@ systemctl set-default multi-user.target
     """.strip()
 
     def do(self):
-        return self.func.run(_Actor.script)
+        return self.func.run(Actor.script)
 
     def __init__(self, func=None):
         self.func = func
@@ -33,7 +33,7 @@ if "INIT_SCRIPT_BASE" in os.environ:
     ATask = __import__("task".format(INIT_SCRIPT_BASE)).AbstractTask
 
 
-    class _RealFunc(object):  # delegate task actor
+    class ProductFunc(object):  # delegate task actor
         def __init__(self):
             pass
 
@@ -50,18 +50,18 @@ if "INIT_SCRIPT_BASE" in os.environ:
             ATask.print_error(out)
 
 
-    def init_func(self): self.actor = _Actor(_RealFunc)
+    def init_func(self): self.actor = Actor(ProductFunc)
 
 
     # 动态创建类
-    _ = type(_Actor.name, (ATask,), dict(
+    _ = type(Actor.name, (ATask,), dict(
         __init__=init_func,
-        order=_Actor.order,
+        order=Actor.order,
     ))
 
 
 def main():
-    class _FakeFunc(object):  # default actor
+    class DebugFunc(object):  # default actor
         def __init__(self):
             pass
 
@@ -77,7 +77,7 @@ def main():
         def print_error(out):
             print(out)
 
-    _Actor(_FakeFunc).do()
+    Actor(DebugFunc).do()
 
 
 if __name__ == "__main__":

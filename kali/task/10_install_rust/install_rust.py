@@ -39,7 +39,7 @@ source $HOME/.cargo/env
             scripts.append(Actor.script_download)
         script = "\n".join(scripts)
         self.func.run(script)
-        print("# Notice: In product mode, script will change .zshrc")
+        print("# Notice: In product mode, script will modify /home/admin/.zshrc")
         try:
             home = os.environ.get("HOME")
             rc = open("{}/.zshrc".format(home), "rb").read()

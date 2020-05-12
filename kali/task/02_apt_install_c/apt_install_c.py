@@ -11,7 +11,7 @@ class _Actor(object):
     order = 2
     script = """
 ################################################################################
-apt install -y build-essential cmake automake
+apt install -y build-essential cmake automake gdb
 apt install -y musl-tools gcc-multilib g++-multilib
 ################################################################################
     """.strip()

@@ -8,46 +8,21 @@ from os import path
 
 
 class Actor(object):
-    name = "TaskInstallRust"
-    order = 10
+    name = "TaskInstallFonts"
+    order = 11
     current_path = path.dirname(path.abspath(__file__))
-    install_sh = path.join(current_path, "rustup-init.sh")
-    script_copy = """
+    script = """
 ################################################################################
-cp {} /tmp/rust.sh
+apt install -y ttf-mscorefonts-installer fontconfig
+mkdir -p /usr/share/fonts/coding/
+cp {}/*.ttf /usr/share/fonts/coding/
+mkfontscale
+fc-cache -fv
 ################################################################################
-    """.strip().format(install_sh)
-    script_download = """
-################################################################################
-wget https://sh.rustup.rs -O /tmp/rust.sh
-################################################################################
-    """
-    script_install = """
-################################################################################
-sh /tmp/rust.sh -y
-source $HOME/.cargo/env
-################################################################################
-    """.strip()
+    """.strip().format(current_path)
 
     def do(self):
-        os.environ["RUSTUP_DIST_SERVER"] = "https://mirrors.ustc.edu.cn/rust-static"
-        os.environ["RUSTUP_UPDATE_ROOT"] = "https://mirrors.ustc.edu.cn/rust-static/rustup"
-        scripts = []
-        if not path.exists("rustup-init.sh"):
-            scripts.append(Actor.script_copy)
-        else:
-            scripts.append(Actor.script_download)
-        script = "\n".join(scripts)
-        self.func.run(script)
-        print("# Notice: In product mode, script will change .zshrc")
-        try:
-            home = os.environ.get("HOME")
-            rc = open("{}/.zshrc".format(home), "rb").read()
-            if b"source $HOME/.cargo/env" not in rc:
-                rc += b"\nsource $HOME/.cargo/env\n"
-                open("{}/.zshrc".format(home), "wb").write(rc)
-        except Exception as e:
-            self.func.print_error(e)
+        self.func.run(Actor.script, False)
 
     def __init__(self, func=None):
         self.func = func

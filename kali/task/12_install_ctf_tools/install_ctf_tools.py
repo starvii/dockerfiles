@@ -5,33 +5,28 @@ from __future__ import print_function
 import os
 import sys
 from os import path
-import shutil
 
 
 class Actor(object):
-    name = "TaskAptSourcesList"
-    order = 0
+    name = "TaskInstallCtfTools"
+    order = 12
     current_path = path.dirname(path.abspath(__file__))
-    sources_list = path.join(current_path, "sources.list")
     script = """
 ################################################################################
-cp {sources_list} /etc/apt/sources.list
-apt update
-apt upgrade -y --fix-missing
+git clone https://github.com/zardus/ctf-tools.git /home/app/ctf-tools
+#dirsearch
+#one_gadget
+#peda
+#pwndbg
+#Pwngdb
+#rp++
+#seccomp-tools
+#yafu
 ################################################################################
-    """.format(sources_list=sources_list).strip()
+    """.strip()
 
     def do(self):
-        print("# Notice: In product mode, script will change /etc/apt/sources.list")
-        try:
-            assert path.exists(self.sources_list) and path.isfile(self.sources_list)
-            if not path.exists("/etc/apt/sources.list.bak"):
-                print("/etc/apt/sources.list.bak not exists. to backup ...")
-                shutil.copy2("/etc/apt/sources.list", "/etc/apt/sources.list.bak")
-            return self.func.run(Actor.script)
-        except Exception as e:
-            self.func.print_error(e)
-            return -1
+        self.func.run(Actor.script, False)
 
     def __init__(self, func=None):
         self.func = func
