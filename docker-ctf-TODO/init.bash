@@ -49,8 +49,8 @@ cp /etc/apt/sources.list /etc/apt/sources.list~ \
     zsh \
     openssh-server \
 && rm -rf /var/lib/apt/list/* \
-&& systemctl enable ssh \
-&& systemctl restart ssh \
+# && systemctl enable ssh \
+# && systemctl restart ssh \
 && mkdir -p ${HOME}/.pip \
 && echo -e "[global]\nindex-url = https://mirrors.aliyun.com/pypi/simple/\n[install]\ntrusted-host=mirrors.aliyun.com">${HOME}/.pip/pip.conf \
 && python3 -m pip install -U pip \
