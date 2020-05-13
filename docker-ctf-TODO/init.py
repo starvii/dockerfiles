@@ -12,8 +12,8 @@ apt update -y
 apt upgrade -y
 apt install -y --fix-missing libc6:i386 libc6-dbg:i386 libc6-dbg lib32stdc++6 g++-multilib gcc-multilib multiarch-support cmake ipython3 vim net-tools iputils-ping libffi-dev libssl-dev python-pip python3-dev python3-pip python3-distutils build-essential ruby ruby-dev tmux strace ltrace nasm wget radare2 gdb gdb-multiarch netcat socat git patchelf gawk file bison curl wget netcat sudo zsh openssh-server
 rm -rf /var/lib/apt/list/*
-mkdir -p ${HOME}/.pip
-echo -e "[global]\nindex-url = https://mirrors.aliyun.com/pypi/simple/\n[install]\ntrusted-host=mirrors.aliyun.com">${HOME}/.pip/pip.conf
+mkdir -p /root/.pip
+echo -e "[global]\nindex-url = https://mirrors.aliyun.com/pypi/simple/\n[install]\ntrusted-host=mirrors.aliyun.com">/root/.pip/pip.conf
 python3 -m pip install -U pip setuptools -i https://mirrors.aliyun.com/pypi/simple
 python3 -m pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple ropgadget pwntools z3-solver smmap2 apscheduler ropper unicorn keystone-engine capstone angr pebble
 gem install one_gadget seccomp-tools
