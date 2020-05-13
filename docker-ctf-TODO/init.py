@@ -20,7 +20,7 @@ gem install one_gadget seccomp-tools
 rm -rf /var/lib/gems/2.*/cache/*
 useradd -m -u 1000 -G sudo -s /bin/bash admin
 echo admin:123 | chpasswd
-basch -c "echo -e '\numask 022\n'>>/home/admin/.bashrc"
+bash -c "echo -e '\numask 022\n'>>/home/admin/.bashrc"
 mkdir -p /home/ctf /home/app
 chown admin:admin /home/ctf /home/app
 
