@@ -7,8 +7,8 @@ import os
 
 class Init(object):
     script = """
-mkdir -p ${{HOME}}/.pip
-bash -c "echo -e '[global]\nindex-url=https://mirrors.aliyun.com/pypi/simple/\n[install]\ntrusted-host=mirrors.aliyun.com'>${{HOME}}/.pip/pip.conf"
+mkdir -p /root/.pip
+bash -c "echo -e '[global]\nindex-url=https://mirrors.aliyun.com/pypi/simple/\n[install]\ntrusted-host=mirrors.aliyun.com'>/root/.pip/pip.conf"
 dpkg --add-architecture i386
 apt update -y
 apt upgrade -y
