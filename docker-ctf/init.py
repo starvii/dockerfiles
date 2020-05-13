@@ -37,7 +37,7 @@ git clone --depth 1 https://github.com/zardus/ctf-tools.git /home/app/ctf-tools
 wget https://github.com/downloads/0vercl0k/rp/rp-lin-x64 -O /usr/bin/rp++
 
 git clone --depth 1 https://github.com/lieanu/LibcSearcher.git /home/app/LibcSearcher
-
+python3 /home/app/LibcSearcher/setup.py devleop
     """.strip()
 
     @staticmethod

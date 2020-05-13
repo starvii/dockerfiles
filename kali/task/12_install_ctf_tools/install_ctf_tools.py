@@ -11,7 +11,7 @@ class Actor(object):
     name = "TaskInstallCtfTools"
     order = 12
     current_path = path.dirname(path.abspath(__file__))
-    script = """
+    script = r"""
 ################################################################################
 git clone https://github.com/zardus/ctf-tools.git /home/app/ctf-tools
 #dirsearch
@@ -25,7 +25,17 @@ git clone https://github.com/zardus/ctf-tools.git /home/app/ctf-tools
 #peda
 #pwn_debug
 #LibcSearcher
+git clone --depth 1 https://github.com/pwndbg/pwndbg /home/app/pwndbg
+cd /home/app/pwndbg/ && bash /home/app/pwndbg/setup.sh && cd ~
+git clone --depth 1 https://github.com/scwuaptx/Pwngdb.git /home/app/pwngdb
+git clone --depth 1 https://github.com/longld/peda.git /home/app/peda
+bash -c "echo -e 'source /home/app/pwndbg/gdbinit.py\nsource /home/app/peda/peda.py\nsource /home/app/pwngdb/pwngdb.py\nsource /home/app/pwngdb/angelheap/gdbinit.py\n\ndefine hook-run\npython\nimport angelheap\nangelheap.init_angelheap()\nend\nend'>/home/admin/.gdbinit"
 
+git clone --depth 1 https://github.com/zardus/ctf-tools.git /home/app/ctf-tools
+wget https://github.com/downloads/0vercl0k/rp/rp-lin-x64 -O /usr/bin/rp++
+
+git clone --depth 1 https://github.com/lieanu/LibcSearcher.git /home/app/LibcSearcher
+python3 /home/app/LibcSearcher/setup.py devleop
 ################################################################################
     """.strip()
 
