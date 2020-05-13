@@ -15,8 +15,8 @@ FROM ubuntu:18.04
 
 ARG DOCKER_SHARE="/home/ctf"
 
-COPY ./init.bash /tmp/init.bash
-COPY ./init_user.bash /tmp/init.bash
+COPY init.bash /tmp/init.bash
+COPY init_user.bash /tmp/init_user.bash
 
 RUN bash -v /tmp/init.sh
 
