@@ -15,10 +15,10 @@ FROM ubuntu:18.04
 
 ARG DOCKER_SHARE="/home/ctf"
 
-COPY init.bash /root/init.bash
-COPY init_user.bash /root/init_user.bash
+COPY init.bash /tmp/init.bash
+COPY init_user.bash /tmp/init_user.bash
 
-RUN bash -v /root/init.sh
+RUN bash -v /tmp/init.bash
 
 # 多版本的libc
 # COPY 
