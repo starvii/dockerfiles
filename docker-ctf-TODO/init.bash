@@ -73,8 +73,8 @@ echo -e "deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe m
 && echo -e "\numask 022\n">>/home/admin/.bashrc \
 && mkdir -p /home/ctf /home/app \
 && chown admin:admin /home/ctf /home/app \
-&& cp /root/init_user.bash /tmp/init_user.bash \
-&& su - admin - c "bash /tmp/init_user.bash" 
+&& su - admin - c "bash /tmp/init_user.bash" \
+&& rm -rf /tmp/*.bash
 
 
 # LibcSearcher
