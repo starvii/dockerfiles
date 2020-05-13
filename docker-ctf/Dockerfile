@@ -21,7 +21,8 @@ RUN bash -c "echo -e 'deb http://mirrors.aliyun.com/ubuntu/ bionic main restrict
 && apt update -y \
 && apt install -y python3 \
 && python3 /tmp/init.py \
-&& rm -rf /tmp/init.py
+&& rm -rf /tmp/init.py \
+&& mkdir /var/run/sshd
 
 VOLUME ${DOCKER_SHARE}
 EXPOSE 22
