@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+import os
 
 
 class Init(object):
@@ -32,7 +33,17 @@ git clone --depth 1 https://github.com/niklasb/libc-database.git /home/app/libc-
 
     @staticmethod
     def init():
-        pass
+        scripts = Init.script.split("\n")
+        for script in scripts:
+            ln = script.strip()
+            print(ln)
+            if len(ln) > 0 and not ln.startswith("#"):
+                ret = os.system(ln)
+                if ret != 0:
+                    print("ret = {}".format(ret))
+                    print(ln)
+                    print("press any key to continue ...")
+                    _ = input()
 
 
 if __name__ == "__main__":
