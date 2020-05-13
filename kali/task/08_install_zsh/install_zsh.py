@@ -67,10 +67,10 @@ su - admin -c "sh /tmp/omz.sh"
                         wait_proc = 0
                         break
         os.kill(pid, 9)
-        rc = open("/home/admin/.zshrc", "rb").read()
         try:
+            rc = open("/home/admin/.zshrc", "rb").read()
             if b"unsetopt share_history" not in rc:
-                rc += "\nunsetopt share_history\nunsetopt inc_append_history\numask 022\n"
+                rc += b"\nunsetopt share_history\nunsetopt inc_append_history\numask 022\n"
                 open("/home/admin/.zshrc", "wb").write(rc)
         except Exception as e:
             self.func.print_error(e)

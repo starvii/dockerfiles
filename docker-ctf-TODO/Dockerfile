@@ -1,4 +1,4 @@
-# 使用debian，常见的pwn环境，自带libc版本是2.28
+# 使用ubuntu 18.04，常见的pwn环境，自带libc版本是2.27
 # 安装常见ctf/pwn工具
 # 外部挂载 /home/ctf 数据卷
 # 端口映射 22 -> 1122
@@ -11,11 +11,12 @@
 #   docker start -i ctf
 
 
-FROM debian:buster
+FROM ubuntu:18.04
 
 ARG DOCKER_SHARE="/home/ctf"
 
 COPY ./init.bash /tmp/init.bash
+COPY ./init_user.bash /tmp/init.bash
 
 RUN bash -v /tmp/init.sh
 

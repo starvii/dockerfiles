@@ -44,7 +44,7 @@ python3 -m pip install -U lxml -i {url}
 python3 -m pip install -U beautifulsoup4 -i {url}
 python3 -m pip install -U tornado -i {url}
 python3 -m pip install -U pillow -i {url}
-python3 -m pip install -U z3 -i {url}
+python3 -m pip install -U z3-solver -i {url}
 python3 -m pip install -U angr -i {url}
 ################################################################################
     """.strip().format(url="https://mirrors.aliyun.com/pypi/simple", pip_conf=pip_conf)

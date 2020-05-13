@@ -6,14 +6,13 @@ import os
 import sys
 from os import path
 
-
 class Actor(object):
     name = "TaskInstallFonts"
     order = 11
     current_path = path.dirname(path.abspath(__file__))
     script = """
 ################################################################################
-apt install -y ttf-mscorefonts-installer fontconfig
+apt install -y fontconfig
 mkdir -p /usr/share/fonts/coding/
 cp {}/*.ttf /usr/share/fonts/coding/
 mkfontscale
