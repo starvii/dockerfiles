@@ -24,12 +24,20 @@ bash -c "echo -e '\numask 022\n'>>/home/admin/.bashrc"
 mkdir -p /home/ctf /home/app
 chown admin:admin /home/ctf /home/app
 
+# git clone --depth 1 https://github.com/niklasb/libc-database.git /home/app/libc-database
+
+
 git clone --depth 1 https://github.com/pwndbg/pwndbg /home/app/pwndbg
 cd /home/app/pwndbg/ && bash /home/app/pwndbg/setup.sh && cd ~
 git clone --depth 1 https://github.com/scwuaptx/Pwngdb.git /home/app/pwngdb
-cat /home/app/pwngdb/.gdbinit >> /home/admin/.gdbinit
-git clone --depth 1 https://github.com/niklasb/libc-database.git /home/app/libc-database
+git clone --depth 1 https://github.com/longld/peda.git /home/app/peda
+bash -c "echo -e 'source /home/app/pwndbg/gdbinit.py\nsource /home/app/peda/peda.py\nsource /home/app/pwngdb/pwngdb.py\nsource /home/app/pwngdb/angelheap/gdbinit.py\n\ndefine hook-run\npython\nimport angelheap\nangelheap.init_angelheap()\nend\nend'>/home/admin/.gdbinit"
+
 git clone --depth 1 https://github.com/zardus/ctf-tools.git /home/app/ctf-tools
+wget https://github.com/downloads/0vercl0k/rp/rp-lin-x64 -O /usr/bin/rp++
+
+git clone --depth 1 https://github.com/lieanu/LibcSearcher.git /home/app/LibcSearcher
+
     """.strip()
 
     @staticmethod

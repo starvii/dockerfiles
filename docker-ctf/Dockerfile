@@ -1,5 +1,5 @@
 # 使用ubuntu 18.04，常见的pwn环境，自带libc版本是2.27
-# 安装常见ctf/pwn工具
+# 安装常见pwn工具
 # 外部挂载 /home/ctf 数据卷
 # 端口映射 22 -> 1122
 
@@ -27,6 +27,5 @@ RUN bash -c "echo -e 'deb http://mirrors.aliyun.com/ubuntu/ bionic main restrict
 VOLUME ${DOCKER_SHARE}
 EXPOSE 22
 
-# 切换至普通用户
-# CMD ["su", "-", "admin"]
-CMD ["bash", "-c", "/usr/sbin/sshd -D&; su - admin"]
+# 启动ssh并切换至普通用户
+CMD ["bash", "-c", "/usr/sbin/sshd -D& su - admin"]
