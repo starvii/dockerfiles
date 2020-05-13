@@ -15,13 +15,13 @@ FROM ubuntu:18.04
 
 ARG DOCKER_SHARE="/home/ctf"
 
-COPY init.bash /tmp/init.bash
-COPY init_user.bash /tmp/init_user.bash
+COPY init.py /tmp/init.py
 
-RUN bash -v /tmp/init.bash
-
-# 多版本的libc
-# COPY 
+RUN bash -c "echo -e 'deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse\n\ndeb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse\n\ndeb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse\n\ndeb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse\n\ndeb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse\ndeb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse'>/etc/apt/sources.list" \
+&& apt update -y \
+&& apt install -y python3 \
+&& python3 /tmp/init.py \
+&& rm -rf /tmp/init.py
 
 VOLUME ${DOCKER_SHARE}
 

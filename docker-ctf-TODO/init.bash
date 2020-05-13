@@ -74,7 +74,7 @@ echo -e "deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe m
 && mkdir -p /home/ctf /home/app \
 && chown admin:admin /home/ctf /home/app \
 && git clone --depth 1 https://github.com/pwndbg/pwndbg /home/app/pwndbg \
-&& bash /home/app/pwndbg/setup.sh \
+&& cd /home/app/pwndbg/ && bash /home/app/pwndbg/setup.sh && cd ~ \
 && git clone --depth 1 https://github.com/scwuaptx/Pwngdb.git /home/app/pwngdb \
 && cat /home/app/pwngdb/.gdbinit >> /home/admin/.gdbinit \
 && git clone --depth 1 https://github.com/niklasb/libc-database.git /home/app/libc-database
