@@ -29,4 +29,4 @@ EXPOSE 22
 
 # 切换至普通用户
 # CMD ["su", "-", "admin"]
-CMD ["/usr/sbin/sshd", "-D"]
+CMD ["bash", "-c", "/usr/sbin/sshd -D&; su - admin"]
