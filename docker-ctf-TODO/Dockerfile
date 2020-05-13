@@ -24,6 +24,8 @@ RUN bash -c "echo -e 'deb http://mirrors.aliyun.com/ubuntu/ bionic main restrict
 && rm -rf /tmp/init.py
 
 VOLUME ${DOCKER_SHARE}
+EXPOSE 22
 
 # 切换至普通用户
-CMD ["su", "-", "admin"]
+# CMD ["su", "-", "admin"]
+CMD ["/usr/sbin/sshd", "-D"]
