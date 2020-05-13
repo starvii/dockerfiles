@@ -6,7 +6,7 @@ import os
 
 
 class Init(object):
-    script = """
+    script = r"""
 mkdir -p /root/.pip
 bash -c "echo -e '[global]\nindex-url=https://mirrors.aliyun.com/pypi/simple/\n[install]\ntrusted-host=mirrors.aliyun.com'>/root/.pip/pip.conf"
 dpkg --add-architecture i386
@@ -20,7 +20,7 @@ gem install one_gadget seccomp-tools
 rm -rf /var/lib/gems/2.*/cache/*
 useradd -m -u 1000 -G sudo -s /bin/bash admin
 echo admin:123 | chpasswd
-echo -e "\numask 022\n">>/home/admin/.bashrc
+basch -c "echo -e '\numask 022\n'>>/home/admin/.bashrc"
 mkdir -p /home/ctf /home/app
 chown admin:admin /home/ctf /home/app
 
