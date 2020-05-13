@@ -73,6 +73,7 @@ cp /etc/apt/sources.list /etc/apt/sources.list~ \
 && echo -e "\numask 022\n">>/home/admin/.bashrc \
 && mkdir -p /home/ctf /home/app \
 && chown admin:admin /home/ctf /home/app \
+&& cp /root/init_user.bash /tmp/init_user.bash \
 && su - admin - c "bash /tmp/init_user.bash" 
 
 
